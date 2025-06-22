@@ -153,6 +153,7 @@ struct IndieBackgroundPattern: View {
 struct AnimatedBorderButton: View {
     let text: String
     @State private var animationPhase: CGFloat = 0
+    @State private var isPressed: Bool = false
     
     var body: some View {
         Text(text)
@@ -179,21 +180,16 @@ struct AnimatedBorderButton: View {
                         )
                 }
             )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
             .onAppear {
                 withAnimation(Animation.linear(duration: 4).repeatForever(autoreverses: false)) {
                     animationPhase = 1.0
                 }
             }
-            .buttonStyle(ScaleButtonStyle())
-    }
-}
-
-// Button style with scale animation
-struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+            .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity, pressing: { pressing in
+                isPressed = pressing
+            }, perform: {})
     }
 }
 

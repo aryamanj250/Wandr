@@ -7,28 +7,41 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
 // Models are imported automatically as they're in the same module
 
 struct MainView: View {
-    @State private var inputText = ""
-    @State private var messages: [Message] = []
+    @State private var currentStatus = "Ready to wander"
     @State private var isRecording = false
     @State private var showItinerary = false
     @State private var itinerary: Itinerary? = nil
     @State private var micScale: CGFloat = 1.0
     @State private var micOpacity: Double = 1.0
-    @State private var isTyping = false
     @State private var processingInput = false
-    @State private var showingWelcome = true
     
     // Animation properties
-    @State private var welcomeOpacity = 0.0
-    @State private var welcomeOffset: CGFloat = 50
+    @State private var circleScale: CGFloat = 0.8
+    @State private var circleOpacity: Double = 0.2
+    @State private var inspirationIndex = 0
+    @State private var showInspiration = true
+    
+    // Inspiration phrases
+    private let inspirations = [
+        "\"I'm in San Francisco for a weekend. Love coffee and vintage shops.\"",
+        "\"Me and 4 friends want a New York day trip on $100 each.\"",
+        "\"Solo traveler in Tokyo for 3 days. First time visitor!\"",
+        "\"Looking for indie restaurants in Portland with live music.\"",
+        "\"Hiking day trip from Seattle with my dog.\""
+    ]
+    
+    // Timer for cycling inspiration
+    let timer = Timer.publish(every: 6, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
-            // Background
-            Color.black.edgesIgnoringSafeArea(.all)
+            // Background with indie pattern
+            IndieBackground()
+                .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
                 // Header
@@ -38,67 +51,50 @@ struct MainView: View {
                     ItineraryView(itinerary: itinerary, isShowing: $showItinerary)
                         .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
                 } else {
-                    // Messages area
-                    ScrollViewReader { scrollView in
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                if showingWelcome {
-                                    welcomeMessageView
-                                        .opacity(welcomeOpacity)
-                                        .offset(y: welcomeOffset)
-                                        .onAppear {
-                                            withAnimation(.easeOut(duration: 0.8).delay(0.3)) {
-                                                welcomeOpacity = 1.0
-                                                welcomeOffset = 0
-                                            }
-                                        }
-                                }
-                                
-                                ForEach(messages) { message in
-                                    MessageView(message: message)
-                                        .id(message.id)
-                                }
-                                
-                                if isTyping {
-                                    TypingIndicator()
-                                        .id("typingIndicator")
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 20)
-                            .padding(.bottom, 10)
-                        }
-                        .onChange(of: messages.count) {
-                            withAnimation {
-                                if let lastMessage = messages.last {
-                                    scrollView.scrollTo(lastMessage.id, anchor: .bottom)
-                                }
-                            }
-                        }
-                        .onChange(of: isTyping) {
-                            if isTyping {
-                                withAnimation {
-                                    scrollView.scrollTo("typingIndicator", anchor: .bottom)
-                                }
-                            }
-                        }
-                    }
-                    .background(Color.black)
+                    // Main voice input area
+                    Spacer()
                     
-                    // Input area
-                    inputView
+                    // Animated inspiration text
+                    if showInspiration {
+                        Text(inspirations[inspirationIndex])
+                            .font(.custom("Futura", size: 16))
+                            .italic()
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(20)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white.opacity(0.05))
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                            .padding(.horizontal, 30)
+                            .padding(.bottom, 30)
+                            .transition(.opacity)
+                            .onReceive(timer) { _ in
+                                withAnimation(.easeInOut(duration: 1.0)) {
+                                    inspirationIndex = (inspirationIndex + 1) % inspirations.count
+                                }
+                            }
+                    }
+                    
+                    // Voice button area
+                    voiceInputArea
+                    
+                    // Status text
+                    Text(currentStatus)
+                        .font(.custom("Futura", size: 16))
+                        .foregroundColor(.white.opacity(0.7))
+                        .padding(.top, 20)
+                        .padding(.bottom, 40)
+                    
+                    Spacer()
                 }
             }
             
             // Voice input overlay
             VoiceInputView(isRecording: $isRecording) {
                 // Handle voice input completion
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    inputText = "Me and my 3 friends are in Goa for 1 day. We want beaches and beer, but we're broke - max ₹4000 per person."
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        sendMessage()
-                    }
-                }
+                handleVoiceCompletion()
             }
             
             // Loading overlay when processing
@@ -109,7 +105,7 @@ struct MainView: View {
         }
     }
     
-    // Header view with animated logo
+    // Header with indie style logo
     private var headerView: some View {
         HStack {
             Text("wandr")
@@ -121,155 +117,102 @@ struct MainView: View {
             
             Spacer()
             
-            if showItinerary == false {
+            if showItinerary == false && itinerary != nil {
                 Button(action: {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                        // Show sample itinerary if needed
-                        if itinerary == nil {
-                            generateSampleItinerary()
-                        }
                         showItinerary = true
                     }
                 }) {
-                    Image(systemName: "map")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white)
-                        .padding()
-                        .opacity(messages.isEmpty ? 0.4 : 1.0)
+                    HStack(spacing: 4) {
+                        Text("Last trip")
+                            .font(.custom("Futura", size: 14))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(8)
+                    .padding(.horizontal, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
+                    .padding(.trailing)
                 }
-                .disabled(messages.isEmpty)
             }
         }
         .frame(height: 60)
-        .background(Color.black)
+        .background(Color.black.opacity(0.3))
     }
     
-    // Welcome message with Alfred's introduction
-    private var welcomeMessageView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 12) {
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text("A")
-                            .font(.custom("Futura", size: 20))
-                            .fontWeight(.bold)
-                            .foregroundStyle(.black)
-                    )
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Alfred")
-                        .font(.custom("Futura", size: 16))
-                        .fontWeight(.medium)
-                        .foregroundStyle(.white.opacity(0.7))
-                    
-                    Text("Hello, I'm Alfred, your travel butler. Tell me about your trip idea, including your location, budget, group size, and the vibe you're looking for. I'll create the perfect itinerary for you.")
-                        .font(.custom("Futura", size: 16))
-                        .foregroundStyle(.white)
-                        .lineSpacing(4)
-                }
-                .padding(.trailing, 16)
-            }
+    // Voice input button area with animations
+    private var voiceInputArea: some View {
+        ZStack {
+            // Pulsating background circles
+            Circle()
+                .fill(Color.white.opacity(0.05))
+                .frame(width: 200, height: 200)
+                .scaleEffect(circleScale)
+                .opacity(circleOpacity)
             
-            Text("Example: \"Me and my 3 friends are in Goa for 1 day. We want beaches and beer, but we're broke - max ₹4000 per person.\"")
-                .font(.custom("Futura", size: 14))
-                .italic()
-                .foregroundStyle(.white.opacity(0.6))
-                .padding(12)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(8)
-        }
-        .padding(16)
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(16)
-    }
-    
-    // Custom input area with animated microphone button
-    private var inputView: some View {
-        VStack(spacing: 0) {
-            Divider()
-                .background(Color.white.opacity(0.2))
+            Circle()
+                .fill(Color.white.opacity(0.05))
+                .frame(width: 160, height: 160)
+                .scaleEffect(circleScale * 1.2)
+                .opacity(circleOpacity * 0.8)
             
-            HStack(spacing: 16) {
-                if !isRecording {
-                    TextField("Tell Alfred your travel plans...", text: $inputText)
-                        .font(.custom("Futura", size: 16))
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(Color.white.opacity(0.07))
-                        .cornerRadius(24)
-                        .submitLabel(.send)
-                        .onSubmit {
-                            sendMessage()
-                        }
-                } else {
-                    Text("Listening...")
-                        .font(.custom("Futura", size: 16))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(12)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.white.opacity(0.07))
-                        .cornerRadius(24)
+            // Main voice button
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    isRecording.toggle()
+                    showInspiration = false
                 }
-                
-                Button(action: {
-                    if inputText.isEmpty {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                            isRecording.toggle()
-                        }
-                    } else {
-                        sendMessage()
-                    }
-                }) {
-                    Image(systemName: inputText.isEmpty ? "mic.fill" : "arrow.up.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundStyle(isRecording ? Color.red : Color.white)
-                        .frame(width: 44, height: 44)
-                        .background(
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(Color.black)
+                        .frame(width: 80, height: 80)
+                        .overlay(
                             Circle()
-                                .fill(Color.white.opacity(0.1))
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
+                        .shadow(color: .white.opacity(0.15), radius: 10, x: 0, y: 0)
+                    
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.white)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.black)
+        }
+        .onAppear {
+            animateCircles()
         }
     }
     
-    // Function to send a message
-    private func sendMessage() {
-        guard !inputText.isEmpty else { return }
-        
-        let userMessage = Message(id: UUID().uuidString, text: inputText, isUser: true, timestamp: Date())
+    // Animate the background circles
+    private func animateCircles() {
+        withAnimation(Animation.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
+            circleScale = 1.1
+            circleOpacity = 0.4
+        }
+    }
+    
+    // Handle voice input completion
+    private func handleVoiceCompletion() {
         withAnimation {
-            messages.append(userMessage)
-            inputText = ""
-            showingWelcome = false
-            isTyping = true
+            currentStatus = "Creating your perfect adventure..."
+            processingInput = true
         }
         
-        // Simulate Alfred's response
-        processingInput = true
+        // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            simulateAlfredResponse(to: userMessage.text)
-            processingInput = false
-            isTyping = false
+            generateSampleItinerary()
+            
+            withAnimation {
+                processingInput = false
+                showItinerary = true
+                currentStatus = "Ready to wander"
+            }
         }
-    }
-    
-    // Simulate Alfred's response
-    private func simulateAlfredResponse(to userPrompt: String) {
-        let response = "I've crafted a perfect day in Goa for you and your friends that fits your ₹4000 per person budget. Your itinerary includes Anjuna Beach, Curlies Beach Shack for lunch, an afternoon at Baga Beach, sunset drinks at Thalassa, and dinner at Britto's. I've included transport options and pricing details. Would you like to see the full itinerary?"
-        
-        let alfredMessage = Message(id: UUID().uuidString, text: response, isUser: false, timestamp: Date())
-        withAnimation {
-            messages.append(alfredMessage)
-        }
-        
-        // Generate a sample itinerary
-        generateSampleItinerary()
     }
     
     // Generate a sample itinerary
@@ -329,136 +272,49 @@ struct MainView: View {
     }
 }
 
-// Message bubble view
-struct MessageView: View {
-    let message: Message
-    @State private var opacity = 0.0
-    @State private var offset: CGFloat = 30
+// Indie-style background
+struct IndieBackground: View {
+    @State private var animateGradient = false
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            if !message.isUser {
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text("A")
-                            .font(.custom("Futura", size: 20))
-                            .fontWeight(.bold)
-                            .foregroundStyle(.black)
-                    )
-            }
-            
-            VStack(alignment: message.isUser ? .trailing : .leading, spacing: 4) {
-                Text(message.isUser ? "You" : "Alfred")
-                    .font(.custom("Futura", size: 14))
-                    .fontWeight(.medium)
-                    .foregroundStyle(.white.opacity(0.7))
-                
-                Text(message.text)
-                    .font(.custom("Futura", size: 16))
-                    .foregroundStyle(.white)
-                    .lineSpacing(4)
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                    .background(
-                        message.isUser ?
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.1)) :
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.05))
-                    )
-                    .cornerRadius(20)
-                    .frame(maxWidth: 300, alignment: message.isUser ? .trailing : .leading)
-            }
-            .frame(maxWidth: .infinity, alignment: message.isUser ? .trailing : .leading)
-            
-            if message.isUser {
-                Circle()
-                    .fill(Color.white.opacity(0.8))
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text("You")
-                            .font(.custom("Futura", size: 12))
-                            .fontWeight(.medium)
-                            .foregroundStyle(.black)
-                    )
-            }
-        }
-        .opacity(opacity)
-        .offset(y: offset)
-        .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8).delay(0.1)) {
-                opacity = 1.0
-                offset = 0
-            }
-        }
-    }
-}
-
-// Typing indicator animation
-struct TypingIndicator: View {
-    @State private var firstDotScale: CGFloat = 1.0
-    @State private var secondDotScale: CGFloat = 1.0
-    @State private var thirdDotScale: CGFloat = 1.0
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 36, height: 36)
-                .overlay(
-                    Text("A")
-                        .font(.custom("Futura", size: 20))
-                        .fontWeight(.bold)
-                        .foregroundStyle(.black)
-                )
-            
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(Color.white.opacity(0.7))
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(firstDotScale)
-                
-                Circle()
-                    .fill(Color.white.opacity(0.7))
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(secondDotScale)
-                
-                Circle()
-                    .fill(Color.white.opacity(0.7))
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(thirdDotScale)
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white.opacity(0.05))
+        ZStack {
+            // Animated gradient background
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.black, 
+                    Color(red: 0.1, green: 0.1, blue: 0.2),
+                    Color.black
+                ]),
+                startPoint: animateGradient ? .topLeading : .bottomLeading,
+                endPoint: animateGradient ? .bottomTrailing : .topTrailing
             )
-        }
-        .onAppear {
-            animateDots()
-        }
-    }
-    
-    // Animated typing indicator
-    private func animateDots() {
-        let animation = Animation.easeInOut(duration: 0.4).repeatForever(autoreverses: true)
-        
-        withAnimation(animation.delay(0)) {
-            firstDotScale = 1.3
-        }
-        
-        withAnimation(animation.delay(0.2)) {
-            secondDotScale = 1.3
-        }
-        
-        withAnimation(animation.delay(0.4)) {
-            thirdDotScale = 1.3
+            .edgesIgnoringSafeArea(.all)
+            .onAppear {
+                withAnimation(Animation.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
+                    animateGradient.toggle()
+                }
+            }
+            
+            // Scattered dots pattern
+            GeometryReader { geometry in
+                ZStack {
+                    // Scattered dots
+                    ForEach(0..<100, id: \.self) { index in
+                        Circle()
+                            .fill(Color.white.opacity(Double.random(in: 0.1...0.3)))
+                            .frame(width: CGFloat.random(in: 1...3), height: CGFloat.random(in: 1...3))
+                            .position(
+                                x: CGFloat.random(in: 0...geometry.size.width),
+                                y: CGFloat.random(in: 0...geometry.size.height)
+                            )
+                    }
+                }
+            }
         }
     }
 }
 
 #Preview {
     MainView()
-} 
+}
+

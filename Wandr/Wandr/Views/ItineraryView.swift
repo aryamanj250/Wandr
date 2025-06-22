@@ -15,11 +15,44 @@ struct ItineraryView: View {
     @State private var showDetails = false
     @State private var selectedTab = 0
     @State private var itemAppearDelay = 0.0
+    @State private var headerOpacity = 0.0
+    @State private var titleScale = 0.9
+    @State private var animateGradient = false
     
     var body: some View {
         ZStack {
-            // Background
-            Color.black.edgesIgnoringSafeArea(.all)
+            // Indie-style background
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.black,
+                    Color(red: 0.1, green: 0.1, blue: 0.2),
+                    Color.black
+                ]),
+                startPoint: animateGradient ? .topLeading : .bottomLeading,
+                endPoint: animateGradient ? .bottomTrailing : .topTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
+            .onAppear {
+                withAnimation(Animation.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
+                    animateGradient.toggle()
+                }
+            }
+            
+            // Indie pattern background
+            GeometryReader { geometry in
+                ZStack {
+                    // Scattered dots
+                    ForEach(0..<60, id: \.self) { index in
+                        Circle()
+                            .fill(Color.white.opacity(Double.random(in: 0.05...0.15)))
+                            .frame(width: CGFloat.random(in: 1...2), height: CGFloat.random(in: 1...2))
+                            .position(
+                                x: CGFloat.random(in: 0...geometry.size.width),
+                                y: CGFloat.random(in: 0...geometry.size.height)
+                            )
+                    }
+                }
+            }
             
             VStack(spacing: 0) {
                 // Header
@@ -30,7 +63,7 @@ struct ItineraryView: View {
                     VStack(spacing: 30) {
                         // Title Section
                         titleSection
-                            .padding(.top, 20)
+                            .padding(.top, 25)
                         
                         // Tab Selection
                         tabSelectionView
@@ -46,11 +79,13 @@ struct ItineraryView: View {
         .onAppear {
             withAnimation(.easeOut.delay(0.3)) {
                 showDetails = true
+                headerOpacity = 1.0
+                titleScale = 1.0
             }
         }
     }
     
-    // Header view
+    // Header view with indie style
     private var headerView: some View {
         HStack {
             Button(action: {
@@ -66,15 +101,24 @@ struct ItineraryView: View {
                         .fontWeight(.medium)
                 }
                 .foregroundStyle(.white)
-                .padding(.leading, 8)
+                .padding(8)
+                .padding(.horizontal, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        .opacity(headerOpacity)
+                )
+                .padding(.leading, 12)
             }
             
             Spacer()
             
-            Text("Itinerary")
+            Text("your journey")
                 .font(.custom("Futura", size: 18))
-                .fontWeight(.semibold)
+                .tracking(1)
+                .fontWeight(.medium)
                 .foregroundStyle(.white)
+                .opacity(headerOpacity)
             
             Spacer()
             
@@ -84,11 +128,32 @@ struct ItineraryView: View {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.white)
-                    .padding(.trailing, 8)
+                    .padding(8)
+                    .background(
+                        Circle()
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            .opacity(headerOpacity)
+                    )
+                    .padding(.trailing, 12)
             }
         }
         .padding(.vertical, 16)
-        .background(Color.black.opacity(0.8))
+        .background(
+            Rectangle()
+                .fill(
+                    Color.black.opacity(0.5)
+                )
+                .overlay(
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.clear, Color.white.opacity(0.05), .clear]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                )
+        )
         .overlay(
             Rectangle()
                 .frame(height: 0.5)
@@ -97,28 +162,39 @@ struct ItineraryView: View {
         )
     }
     
-    // Title section
+    // Title section with indie style
     private var titleSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Text(itinerary.title)
-                .font(.custom("Futura", size: 28))
+                .font(.custom("Futura", size: 32))
                 .fontWeight(.bold)
-                .foregroundStyle(.white)
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [.white, .white.opacity(0.8)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .multilineTextAlignment(.center)
                 .opacity(showDetails ? 1 : 0)
+                .scaleEffect(titleScale)
+                .shadow(color: .white.opacity(0.1), radius: 10, x: 0, y: 0)
                 .animation(.easeOut.delay(0.1), value: showDetails)
             
             Text(itinerary.subtitle)
                 .font(.custom("Futura", size: 16))
+                .italic()
+                .tracking(1)
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .padding(.bottom, 5)
+                .padding(.bottom, 10)
                 .opacity(showDetails ? 1 : 0)
                 .animation(.easeOut.delay(0.2), value: showDetails)
             
             HStack {
-                Text("Total Budget:")
+                Text("Budget")
                     .font(.custom("Futura", size: 16))
+                    .tracking(1)
                     .foregroundStyle(.white.opacity(0.8))
                 
                 Text(itinerary.totalCost)
@@ -126,18 +202,34 @@ struct ItineraryView: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 20)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        .white.opacity(0.3), 
+                                        .white.opacity(0.1),
+                                        .white.opacity(0.3)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(color: .white.opacity(0.05), radius: 10, x: 0, y: 0)
             )
             .opacity(showDetails ? 1 : 0)
             .animation(.easeOut.delay(0.3), value: showDetails)
         }
     }
     
-    // Tab selection view
+    // Tab selection view with indie style
     private var tabSelectionView: some View {
         HStack(spacing: 0) {
             tabButton(title: "Timeline", index: 0)
@@ -145,14 +237,18 @@ struct ItineraryView: View {
             tabButton(title: "Notes", index: 2)
         }
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
         )
         .opacity(showDetails ? 1 : 0)
         .animation(.easeOut.delay(0.4), value: showDetails)
     }
     
-    // Tab button
+    // Tab button with indie style
     private func tabButton(title: String, index: Int) -> some View {
         Button(action: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -163,16 +259,28 @@ struct ItineraryView: View {
             Text(title)
                 .font(.custom("Futura", size: 15))
                 .fontWeight(.medium)
+                .tracking(0.5)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
                 .background(
                     selectedTab == index ?
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    .white, 
+                                    .white.opacity(0.9)
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: .white.opacity(0.2), radius: 5, x: 0, y: 0)
                         .padding(2) : nil
                 )
                 .foregroundStyle(selectedTab == index ? .black : .white.opacity(0.7))
         }
+        .scaleEffect(selectedTab == index ? 1.0 : 0.98)
     }
     
     // Reset animation delay counter
@@ -232,10 +340,14 @@ struct ItineraryView: View {
                 .font(.custom("Futura", size: 16))
                 .foregroundStyle(.white.opacity(0.9))
                 .lineSpacing(6)
-                .padding(16)
+                .padding(20)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(Color.white.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
                 )
                 .opacity(showDetails ? 1 : 0)
                 .animation(.easeOut.delay(0.6), value: showDetails)
@@ -245,162 +357,30 @@ struct ItineraryView: View {
     }
 }
 
-// Itinerary Item View
-struct ItineraryItemView: View {
-    let item: ItineraryItem
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            // Time column
-            VStack {
-                ZStack {
-                    Circle()
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        .frame(width: 24, height: 24)
-                    
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 10, height: 10)
-                }
-                
-                Text(item.time)
-                    .font(.custom("Futura", size: 14))
-                    .fontWeight(.medium)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .frame(width: 60)
-                    .multilineTextAlignment(.center)
-            }
-            
-            // Content column
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: item.image)
-                        .font(.system(size: 18))
-                        .foregroundStyle(.white)
-                        .frame(width: 24, height: 24)
-                    
-                    Text(item.title)
-                        .font(.custom("Futura", size: 18))
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                }
-                
-                Text(item.description)
-                    .font(.custom("Futura", size: 14))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .lineSpacing(4)
-                
-                Text(item.cost)
-                    .font(.custom("Futura", size: 14))
-                    .fontWeight(.medium)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white.opacity(0.05))
-                    )
-            }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.05))
-            )
-        }
-    }
-}
-
-// Transport Option View
-struct TransportOptionView: View {
-    let option: TransportOption
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: transportIcon)
-                    .font(.system(size: 18))
-                    .foregroundStyle(.white)
-                    .frame(width: 24, height: 24)
-                
-                Text(option.type)
-                    .font(.custom("Futura", size: 18))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-            }
-            
-            Text(option.description)
-                .font(.custom("Futura", size: 14))
-                .foregroundStyle(.white.opacity(0.8))
-            
-            Text(option.cost)
-                .font(.custom("Futura", size: 14))
-                .fontWeight(.medium)
-                .foregroundStyle(.white.opacity(0.7))
-                .padding(.vertical, 6)
-                .padding(.horizontal, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.05))
-                )
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-        )
-    }
-    
-    // Get appropriate transport icon
-    private var transportIcon: String {
-        switch option.type.lowercased() {
-        case let type where type.contains("scooter"):
-            return "scooter"
-        case let type where type.contains("taxi") || type.contains("car"):
-            return "car.fill"
-        case let type where type.contains("bus"):
-            return "bus"
-        default:
-            return "figure.walk"
-        }
-    }
-}
-
-
-
+// Preview
 #Preview {
-    ItineraryView(
-        itinerary: Itinerary(
-            title: "Goa Beach Day",
-            subtitle: "A budget-friendly day of beaches and beer",
-            totalCost: "₹3800 per person (approx.)",
-            items: [
-                ItineraryItem(
-                    time: "9:00 AM",
-                    title: "Anjuna Beach",
-                    description: "Start your day with the sunrise at this beautiful beach.",
-                    cost: "Free",
-                    image: "sunrise.fill"
-                ),
-                ItineraryItem(
-                    time: "12:00 PM",
-                    title: "Lunch at Curlies Beach Shack",
-                    description: "Enjoy budget-friendly seafood and beer with ocean views.",
-                    cost: "₹600 per person",
-                    image: "fork.knife"
-                )
-            ],
-            transportOptions: [
-                TransportOption(
-                    type: "Rented Scooters",
-                    cost: "₹400 per day per scooter",
-                    description: "Most flexible option"
-                )
-            ],
-            notes: "Prices are approximate. This itinerary keeps you under your budget."
-        ),
-        isShowing: .constant(true)
+    let sampleItems = [
+        ItineraryItem(
+            time: "9:00 AM",
+            title: "Beach Morning",
+            description: "Start your day at Anjuna Beach",
+            cost: "Free",
+            image: "sunrise.fill"
+        )
+    ]
+    
+    let sampleTransport = [
+        TransportOption(type: "Scooter", cost: "₹400", description: "Most flexible")
+    ]
+    
+    let sampleItinerary = Itinerary(
+        title: "Goa Beach Day",
+        subtitle: "A day of sun and fun",
+        totalCost: "₹3800 per person",
+        items: sampleItems,
+        transportOptions: sampleTransport,
+        notes: "Sample notes about the trip"
     )
-} 
+    
+    return ItineraryView(itinerary: sampleItinerary, isShowing: .constant(true))
+}
