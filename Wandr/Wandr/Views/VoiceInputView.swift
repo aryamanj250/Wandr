@@ -2,7 +2,7 @@
 //  VoiceInputView.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by Aryaman Jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -28,155 +28,16 @@ struct VoiceInputView: View {
     @State private var recordingTimer: Timer?
     @State private var recordingDuration: Double = 0
     @State private var isAnimating = false
-    @State private var pulseColors = false
-    
-    // Visualization style
-    @State private var visualizerRotation = 0.0
     
     private let maxRecordingTime: Double = 15.0
     
     var body: some View {
         ZStack {
-            // Background blur with indie pattern
-            if isRecording {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black.opacity(0.9), 
-                        Color(red: 0.1, green: 0.1, blue: 0.2).opacity(0.9)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .edgesIgnoringSafeArea(.all)
-                .opacity(opacity)
-                
-                // Indie style dots pattern
-                GeometryReader { geometry in
-                    ForEach(0..<40, id: \.self) { index in
-                        Circle()
-                            .fill(Color.white.opacity(Double.random(in: 0.1...0.3)))
-                            .frame(width: CGFloat.random(in: 1...3), height: CGFloat.random(in: 1...3))
-                            .position(
-                                x: CGFloat.random(in: 0...geometry.size.width),
-                                y: CGFloat.random(in: 0...geometry.size.height)
-                            )
-                    }
-                }
-                .opacity(opacity * 0.5)
-            }
+            // Background
+            backgroundView
             
-            VStack(spacing: 20) {
-                if isRecording {
-                    Text("listening...")
-                        .font(.custom("Futura", size: 28))
-                        .fontWeight(.medium)
-                        .foregroundStyle(.white)
-                        .tracking(2)
-                        .opacity(opacity * 0.9)
-                }
-                
-                // Recording indicator
-                ZStack {
-                    // Audio visualization ring
-                    ForEach(0..<3) { ring in
-                        Circle()
-                            .stroke(
-                                pulseColors ? 
-                                    LinearGradient(
-                                        colors: [.white, .white.opacity(0.5), .white],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                    : Color.white.opacity(0.2),
-                                lineWidth: 1.5
-                            )
-                            .frame(width: 110 + CGFloat(ring * 20), height: 110 + CGFloat(ring * 20))
-                            .scaleEffect(ringScale - (0.05 * CGFloat(ring)))
-                            .opacity(ringOpacity - (0.2 * Double(ring)))
-                            .rotationEffect(Angle(degrees: visualizerRotation + (Double(ring) * 30)))
-                    }
-                    
-                    // Main button background
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 90, height: 90)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
-                        )
-                        .shadow(color: .white.opacity(0.2), radius: 15, x: 0, y: 0)
-                    
-                    // Sound waves
-                    HStack(spacing: 4) {
-                        soundWave(height: waveHeight1)
-                        soundWave(height: waveHeight2)
-                        soundWave(height: waveHeight3)
-                        soundWave(height: waveHeight4)
-                        soundWave(height: waveHeight5)
-                        soundWave(height: waveHeight6)
-                        soundWave(height: waveHeight7)
-                    }
-                    .opacity(isAnimating ? 1 : 0)
-                    
-                    // Microphone icon
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(pulseColors ? Color.white : Color.white.opacity(0.7))
-                        .opacity(isAnimating ? 0 : 1)
-                }
-                .scaleEffect(scale)
-                
-                // Timer text with indie styling
-                Text(timeFormatted)
-                    .font(.custom("Futura", size: 16))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .padding(.top, 10)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.1))
-                            .blur(radius: 0.5)
-                    )
-                
-                // Action buttons with indie style
-                HStack(spacing: 60) {
-                    // Cancel button
-                    Button(action: {
-                        cancelRecording()
-                    }) {
-                        Text("Cancel")
-                            .font(.custom("Futura", size: 16))
-                            .foregroundStyle(.white.opacity(0.8))
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 24)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
-                            )
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    
-                    // Done button
-                    Button(action: {
-                        finishRecording()
-                    }) {
-                        Text("Done")
-                            .font(.custom("Futura", size: 16))
-                            .fontWeight(.medium)
-                            .foregroundStyle(.black)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 24)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.white)
-                                    .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
-                            )
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                }
-                .opacity(opacity)
-            }
+            // Main content
+            mainContentView
         }
         .opacity(isRecording ? 1 : 0)
         .onChange(of: isRecording) { newValue in
@@ -188,14 +49,137 @@ struct VoiceInputView: View {
         }
     }
     
+    // MARK: - View Components
+    
+    private var backgroundView: some View {
+        Group {
+            if isRecording {
+                Color.black
+                    .edgesIgnoringSafeArea(.all)
+                    .opacity(opacity)
+            }
+        }
+    }
+    
+    private var mainContentView: some View {
+        VStack(spacing: 20) {
+            if isRecording {
+                listeningTextView
+            }
+            
+            // Recording indicator
+            recordingIndicatorView
+            
+            // Timer text
+            timerView
+            
+            // Action buttons
+            actionButtonsView
+        }
+    }
+    
+    private var listeningTextView: some View {
+        Text("listening...")
+            .font(.custom("Futura", size: 28))
+            .fontWeight(.medium)
+            .foregroundStyle(.white)
+            .tracking(2)
+            .opacity(opacity * 0.9)
+    }
+    
+    private var recordingIndicatorView: some View {
+        ZStack {
+            // Main button background
+            Circle()
+                .fill(Color.black)
+                .frame(width: 90, height: 90)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
+                )
+                .shadow(color: .white.opacity(0.2), radius: 15, x: 0, y: 0)
+            
+            // Sound waves
+            soundWavesView
+            
+            // Microphone icon
+            Image(systemName: "mic.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .opacity(isAnimating ? 0 : 1)
+        }
+        .scaleEffect(scale)
+    }
+    
+    private var soundWavesView: some View {
+        HStack(spacing: 4) {
+            soundWave(height: waveHeight1)
+            soundWave(height: waveHeight2)
+            soundWave(height: waveHeight3)
+            soundWave(height: waveHeight4)
+            soundWave(height: waveHeight5)
+            soundWave(height: waveHeight6)
+            soundWave(height: waveHeight7)
+        }
+        .opacity(isAnimating ? 1 : 0)
+    }
+    
+    private var timerView: some View {
+        Text(timeFormatted)
+            .font(.custom("Futura", size: 16))
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.top, 10)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white.opacity(0.1))
+            )
+    }
+    
+    private var actionButtonsView: some View {
+        HStack(spacing: 60) {
+            // Cancel button
+            Button(action: {
+                cancelRecording()
+            }) {
+                Text("Cancel")
+                    .font(.custom("Futura", size: 16))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
+                    )
+            }
+            .buttonStyle(ScaleButtonStyle())
+            
+            // Done button
+            Button(action: {
+                finishRecording()
+            }) {
+                Text("Done")
+                    .font(.custom("Futura", size: 16))
+                    .fontWeight(.medium)
+                    .foregroundStyle(.black)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.white)
+                            .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
+                    )
+            }
+            .buttonStyle(ScaleButtonStyle())
+        }
+        .opacity(opacity)
+    }
+    
     // Single sound wave bar with rounded corners
     private func soundWave(height: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: 2)
-            .fill(
-                pulseColors ? 
-                Color.white :
-                Color.white.opacity(0.9)
-            )
+            .fill(Color.white.opacity(0.9))
             .frame(width: 3, height: max(4, height))
     }
     
@@ -211,22 +195,8 @@ struct VoiceInputView: View {
         withAnimation(.easeIn(duration: 0.4)) {
             opacity = 1.0
             scale = 1.0
-            
-            // Start pulse animation
-            withAnimation(Animation.easeOut(duration: 1.2).repeatForever(autoreverses: true)) {
-                ringScale = 1.3
-                ringOpacity = 0.7
-            }
-            
-            // Rotate the visualizer
-            withAnimation(Animation.linear(duration: 10).repeatForever(autoreverses: false)) {
-                visualizerRotation = 360
-            }
-            
-            // Pulse colors
-            withAnimation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                pulseColors = true
-            }
+            ringScale = 1.0
+            ringOpacity = 0.7
         }
         
         // Start wave animation after a short delay
@@ -318,7 +288,6 @@ struct VoiceInputView: View {
         recordingTimer = nil
         recordingDuration = 0
         isAnimating = false
-        pulseColors = false
         waveHeight1 = 0
         waveHeight2 = 0
         waveHeight3 = 0

@@ -2,7 +2,7 @@
 //  MainView.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by Aryaman Jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -278,12 +278,11 @@ struct IndieBackground: View {
     
     var body: some View {
         ZStack {
-            // Animated gradient background
+            // Simple gradient background
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.black, 
-                    Color(red: 0.1, green: 0.1, blue: 0.2),
-                    Color.black
+                    Color.black.opacity(0.95)
                 ]),
                 startPoint: animateGradient ? .topLeading : .bottomLeading,
                 endPoint: animateGradient ? .bottomTrailing : .topTrailing
@@ -292,22 +291,6 @@ struct IndieBackground: View {
             .onAppear {
                 withAnimation(Animation.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
                     animateGradient.toggle()
-                }
-            }
-            
-            // Scattered dots pattern
-            GeometryReader { geometry in
-                ZStack {
-                    // Scattered dots
-                    ForEach(0..<100, id: \.self) { index in
-                        Circle()
-                            .fill(Color.white.opacity(Double.random(in: 0.1...0.3)))
-                            .frame(width: CGFloat.random(in: 1...3), height: CGFloat.random(in: 1...3))
-                            .position(
-                                x: CGFloat.random(in: 0...geometry.size.width),
-                                y: CGFloat.random(in: 0...geometry.size.height)
-                            )
-                    }
                 }
             }
         }

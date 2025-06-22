@@ -2,7 +2,7 @@
 //  TimelineView.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by Aryaman Jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -52,9 +52,6 @@ struct TimelineItemView: View {
     var lineProgress: CGFloat = 1.0
     var delay: Double = 0
     
-    @State private var glowOpacity = 0.0
-    @State private var pulseScale = 1.0
-    
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             // Time column with timeline
@@ -66,69 +63,24 @@ struct TimelineItemView: View {
                     .padding(.bottom, 8)
                     .frame(width: 80)
                 
-                // Timeline dot with pulse animation
+                // Timeline dot
                 ZStack {
-                    // Pulse circle
-                    Circle()
-                        .fill(Color.white.opacity(0.2))
-                        .frame(width: 28, height: 28)
-                        .scaleEffect(pulseScale)
-                        .opacity(glowOpacity)
-                    
                     // Dot wrapper
                     Circle()
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white.opacity(0.8),
-                                    .white.opacity(0.4)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
-                        )
+                        .stroke(Color.white.opacity(0.6), lineWidth: 2)
                         .frame(width: 20, height: 20)
                     
                     // Center dot
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white,
-                                    .white.opacity(0.8)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(Color.white)
                         .frame(width: 10, height: 10)
-                        .shadow(color: .white.opacity(0.5), radius: 4, x: 0, y: 0)
-                }
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.5) {
-                        withAnimation(Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                            glowOpacity = 0.7
-                            pulseScale = 1.3
-                        }
-                    }
                 }
                 
                 // Timeline line with growing animation
                 if !isLast {
                     GeometryReader { geometry in
                         Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        .white.opacity(0.3),
-                                        .white.opacity(0.15),
-                                        .white.opacity(0.3)
-                                    ]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
+                            .fill(Color.white.opacity(0.2))
                             .frame(width: 2, height: geometry.size.height * lineProgress)
                             .frame(height: geometry.size.height, alignment: .top)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -145,16 +97,7 @@ struct TimelineItemView: View {
                 HStack(alignment: .center, spacing: 12) {
                     Image(systemName: item.image)
                         .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white,
-                                    .white.opacity(0.7)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                        .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
                         .background(
                             Circle()
@@ -197,20 +140,8 @@ struct TimelineItemView: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        .white.opacity(0.3), 
-                                        .white.opacity(0.1),
-                                        .white.opacity(0.3)
-                                    ]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
                     )
-                    .shadow(color: .white.opacity(0.05), radius: 10, x: 0, y: 0)
             )
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -218,49 +149,22 @@ struct TimelineItemView: View {
     }
 }
 
-// Transport Option View with indie styling
+// Transport Option View with clean styling
 struct TransportOptionView: View {
     let option: TransportOption
-    @State private var glowOpacity = 0.0
-    @State private var glowScale = 1.0
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
-                // Icon with glow effect
-                ZStack {
-                    // Glow effect
-                    Circle()
-                        .fill(Color.white.opacity(0.15))
-                        .frame(width: 44, height: 44)
-                        .scaleEffect(glowScale)
-                        .opacity(glowOpacity)
-                    
-                    // Icon background
-                    Circle()
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 38, height: 38)
-                    
-                    // Icon
-                    Image(systemName: transportIcon)
-                        .font(.system(size: 20))
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white,
-                                    .white.opacity(0.7)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                }
-                .onAppear {
-                    withAnimation(Animation.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                        glowOpacity = 0.5
-                        glowScale = 1.3
-                    }
-                }
+                // Icon
+                Circle()
+                    .fill(Color.white.opacity(0.05))
+                    .frame(width: 38, height: 38)
+                    .overlay(
+                        Image(systemName: transportIcon)
+                            .font(.system(size: 20))
+                            .foregroundStyle(.white)
+                    )
                 
                 Text(option.type)
                     .font(.custom("Futura", size: 18))
@@ -296,20 +200,8 @@ struct TransportOptionView: View {
                 .fill(Color.white.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white.opacity(0.3), 
-                                    .white.opacity(0.1),
-                                    .white.opacity(0.3)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
                 )
-                .shadow(color: .white.opacity(0.05), radius: 10, x: 0, y: 0)
         )
     }
     
@@ -329,35 +221,33 @@ struct TransportOptionView: View {
 }
 
 // Preview
-struct TimelineView_Previews: PreviewProvider {
-    static var previews: some View {
-        ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            TimelineView(items: [
-                ItineraryItem(
-                    time: "9:00 AM",
-                    title: "Anjuna Beach",
-                    description: "Start your day with the sunrise at this beautiful beach.",
-                    cost: "Free",
-                    image: "sunrise.fill"
-                ),
-                ItineraryItem(
-                    time: "12:00 PM",
-                    title: "Lunch at Curlies Beach Shack",
-                    description: "Enjoy budget-friendly seafood and beer with ocean views.",
-                    cost: "₹600 per person",
-                    image: "fork.knife"
-                ),
-                ItineraryItem(
-                    time: "5:00 PM",
-                    title: "Sunset at Thalassa",
-                    description: "Enjoy the famous sunset with a beer in hand at this Greek-themed restaurant.",
-                    cost: "₹300-400 per person for drinks",
-                    image: "sunset.fill"
-                )
-            ])
-            .padding()
-        }
+#Preview {
+    ZStack {
+        Color.black.edgesIgnoringSafeArea(.all)
+        
+        TimelineView(items: [
+            ItineraryItem(
+                time: "9:00 AM",
+                title: "Anjuna Beach",
+                description: "Start your day with the sunrise at this beautiful beach.",
+                cost: "Free",
+                image: "sunrise.fill"
+            ),
+            ItineraryItem(
+                time: "12:00 PM",
+                title: "Lunch at Curlies Beach Shack",
+                description: "Enjoy budget-friendly seafood and beer with ocean views.",
+                cost: "₹600 per person",
+                image: "fork.knife"
+            ),
+            ItineraryItem(
+                time: "5:00 PM",
+                title: "Sunset at Thalassa",
+                description: "Enjoy the famous sunset with a beer in hand at this Greek-themed restaurant.",
+                cost: "₹300-400 per person for drinks",
+                image: "sunset.fill"
+            )
+        ])
+        .padding()
     }
 } 

@@ -14,18 +14,10 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            // Indie-style background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.black, 
-                    Color(red: 0.1, green: 0.1, blue: 0.2),
-                    Color.black
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .edgesIgnoringSafeArea(.all)
-            .opacity(backgroundOpacity)
+            // Clean black background
+            Color.black
+                .edgesIgnoringSafeArea(.all)
+                .opacity(backgroundOpacity)
             
             // Content
             if isOnboarding {

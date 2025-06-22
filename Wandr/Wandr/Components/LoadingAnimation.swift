@@ -2,7 +2,7 @@
 //  LoadingAnimation.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by Aryaman Jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -123,29 +123,9 @@ struct LoadingOverlay: View {
     
     var body: some View {
         ZStack {
-            // Blurred background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.black.opacity(0.8), 
-                    Color(red: 0.1, green: 0.1, blue: 0.2).opacity(0.8)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .edgesIgnoringSafeArea(.all)
-            
-            // Background pattern
-            GeometryReader { geometry in
-                ForEach(0..<40, id: \.self) { index in
-                    Circle()
-                        .fill(Color.white.opacity(Double.random(in: 0.05...0.1)))
-                        .frame(width: CGFloat.random(in: 1...3), height: CGFloat.random(in: 1...3))
-                        .position(
-                            x: CGFloat.random(in: 0...geometry.size.width),
-                            y: CGFloat.random(in: 0...geometry.size.height)
-                        )
-                }
-            }
+            // Clean black background
+            Color.black.opacity(0.9)
+                .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 25) {
                 LoadingAnimation()

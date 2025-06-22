@@ -2,7 +2,7 @@
 //  ItineraryView.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by Aryaman Jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -17,42 +17,12 @@ struct ItineraryView: View {
     @State private var itemAppearDelay = 0.0
     @State private var headerOpacity = 0.0
     @State private var titleScale = 0.9
-    @State private var animateGradient = false
     
     var body: some View {
         ZStack {
-            // Indie-style background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.black,
-                    Color(red: 0.1, green: 0.1, blue: 0.2),
-                    Color.black
-                ]),
-                startPoint: animateGradient ? .topLeading : .bottomLeading,
-                endPoint: animateGradient ? .bottomTrailing : .topTrailing
-            )
-            .edgesIgnoringSafeArea(.all)
-            .onAppear {
-                withAnimation(Animation.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
-                    animateGradient.toggle()
-                }
-            }
-            
-            // Indie pattern background
-            GeometryReader { geometry in
-                ZStack {
-                    // Scattered dots
-                    ForEach(0..<60, id: \.self) { index in
-                        Circle()
-                            .fill(Color.white.opacity(Double.random(in: 0.05...0.15)))
-                            .frame(width: CGFloat.random(in: 1...2), height: CGFloat.random(in: 1...2))
-                            .position(
-                                x: CGFloat.random(in: 0...geometry.size.width),
-                                y: CGFloat.random(in: 0...geometry.size.height)
-                            )
-                    }
-                }
-            }
+            // Clean black background
+            Color.black
+                .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
                 // Header
@@ -85,7 +55,7 @@ struct ItineraryView: View {
         }
     }
     
-    // Header view with indie style
+    // Header view 
     private var headerView: some View {
         HStack {
             Button(action: {
@@ -140,19 +110,7 @@ struct ItineraryView: View {
         .padding(.vertical, 16)
         .background(
             Rectangle()
-                .fill(
-                    Color.black.opacity(0.5)
-                )
-                .overlay(
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.clear, Color.white.opacity(0.05), .clear]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                )
+                .fill(Color.black.opacity(0.5))
         )
         .overlay(
             Rectangle()
@@ -162,23 +120,16 @@ struct ItineraryView: View {
         )
     }
     
-    // Title section with indie style
+    // Title section with clean style
     private var titleSection: some View {
         VStack(spacing: 16) {
             Text(itinerary.title)
                 .font(.custom("Futura", size: 32))
                 .fontWeight(.bold)
-                .foregroundStyle(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.white, .white.opacity(0.8)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .opacity(showDetails ? 1 : 0)
                 .scaleEffect(titleScale)
-                .shadow(color: .white.opacity(0.1), radius: 10, x: 0, y: 0)
                 .animation(.easeOut.delay(0.1), value: showDetails)
             
             Text(itinerary.subtitle)
@@ -209,27 +160,15 @@ struct ItineraryView: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        .white.opacity(0.3), 
-                                        .white.opacity(0.1),
-                                        .white.opacity(0.3)
-                                    ]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
                     )
-                    .shadow(color: .white.opacity(0.05), radius: 10, x: 0, y: 0)
             )
             .opacity(showDetails ? 1 : 0)
             .animation(.easeOut.delay(0.3), value: showDetails)
         }
     }
     
-    // Tab selection view with indie style
+    // Tab selection view
     private var tabSelectionView: some View {
         HStack(spacing: 0) {
             tabButton(title: "Timeline", index: 0)
@@ -248,7 +187,7 @@ struct ItineraryView: View {
         .animation(.easeOut.delay(0.4), value: showDetails)
     }
     
-    // Tab button with indie style
+    // Tab button with clean style
     private func tabButton(title: String, index: Int) -> some View {
         Button(action: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -265,17 +204,7 @@ struct ItineraryView: View {
                 .background(
                     selectedTab == index ?
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    .white, 
-                                    .white.opacity(0.9)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .shadow(color: .white.opacity(0.2), radius: 5, x: 0, y: 0)
+                        .fill(Color.white)
                         .padding(2) : nil
                 )
                 .foregroundStyle(selectedTab == index ? .black : .white.opacity(0.7))

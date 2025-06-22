@@ -2,7 +2,7 @@
 //  OnboardingView.swift
 //  Wandr
 //
-//  Created by AI on 23/06/25.
+//  Created by aryaman jaiswal on 23/06/25.
 //
 
 import SwiftUI
@@ -22,22 +22,9 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            // Background pattern
-            IndieBackgroundPattern()
-                .opacity(backgroundOpacity)
-                .onAppear {
-                    withAnimation(.easeIn(duration: 1.5)) {
-                        backgroundOpacity = 0.3
-                    }
-                }
-            
-            // Gradient overlay
-            LinearGradient(
-                gradient: Gradient(colors: [.black, .black.opacity(0.8), .black]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .edgesIgnoringSafeArea(.all)
+            // Clean black background
+            Color.black
+                .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 40) {
                 Spacer()
@@ -121,31 +108,11 @@ struct OnboardingView: View {
     }
 }
 
-// Indie-style background pattern
+// Clean background for consistency
 struct IndieBackgroundPattern: View {
-    @State private var dotOpacity = 0.0
-    
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Scattered dots
-                ForEach(0..<100, id: \.self) { index in
-                    Circle()
-                        .fill(Color.white.opacity(Double.random(in: 0.1...0.3)))
-                        .frame(width: CGFloat.random(in: 1...3), height: CGFloat.random(in: 1...3))
-                        .position(
-                            x: CGFloat.random(in: 0...geometry.size.width),
-                            y: CGFloat.random(in: 0...geometry.size.height)
-                        )
-                        .opacity(dotOpacity)
-                }
-            }
-            .onAppear {
-                withAnimation(.easeIn(duration: 2.0)) {
-                    dotOpacity = 1.0
-                }
-            }
-        }
+        Color.black.opacity(0.1)
+            .edgesIgnoringSafeArea(.all)
     }
 }
 
