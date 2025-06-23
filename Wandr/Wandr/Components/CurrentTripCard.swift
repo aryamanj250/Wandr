@@ -376,22 +376,29 @@ struct CurrentTripWithAgents: View {
             AgentActivity(
                 agentType: .weather,
                 status: .active,
-                currentTask: "Monitoring Delhi weather for next 24 hours",
-                lastUpdate: "2 minutes ago",
-                progress: 0.8
+                currentTask: "Clear skies detected - perfect for Red Fort photos",
+                lastUpdate: "1 minute ago",
+                progress: 1.0
             ),
             AgentActivity(
                 agentType: .traffic,
                 status: .active,
-                currentTask: "Tracking traffic to Red Fort - suggesting optimal route",
+                currentTask: "Suggesting 2:30 PM departure to avoid traffic",
                 lastUpdate: "30 seconds ago",
-                progress: 0.9
+                progress: 1.0
             ),
             AgentActivity(
-                agentType: .restaurant,
-                status: .waiting,
-                currentTask: "Confirmed Karim's reservation - awaiting your arrival",
-                lastUpdate: "10 minutes ago",
+                agentType: .booking,
+                status: .completed,
+                currentTask: "All reservations confirmed (Karim's, Red Fort, transport)",
+                lastUpdate: "2 days ago",
+                progress: 1.0
+            ),
+            AgentActivity(
+                agentType: .activity,
+                status: .completed,
+                currentTask: "All tickets secured and activities planned",
+                lastUpdate: "2 days ago",
                 progress: 1.0
             )
         ]
@@ -437,7 +444,25 @@ struct TripWithAgentStatus: View {
                     AgentStatusDot(type: .booking, status: .active)
                     AgentStatusDot(type: .weather, status: .standby)
                     AgentStatusDot(type: .restaurant, status: .standby)
+                    
                     Spacer()
+                    
+                    // Autonomous indicator
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(.green)
+                            .frame(width: 6, height: 6)
+                            .overlay(
+                                Circle()
+                                    .stroke(.green.opacity(0.3), lineWidth: 1)
+                                    .scaleEffect(1.3)
+                            )
+                        
+                        Text("Auto")
+                            .font(.custom("Futura", size: 9))
+                            .foregroundStyle(.green)
+                            .fontWeight(.medium)
+                    }
                 }
             }
             

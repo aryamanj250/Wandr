@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var showVoiceInterface = false
     @State private var showPreferencesSelection = false
     @State private var voiceInputResult: VoiceInputResult?
+    @State private var upcomingTrips: [UpcomingTrip] = []
     @State private var currentTime = Date()
     @State private var voiceButtonScale: CGFloat = 1.0
     @State private var glassOpacity: Double = 1.0
@@ -58,10 +59,8 @@ struct HomeView: View {
             // Preferences selection overlay
             if showPreferencesSelection, let voiceResult = voiceInputResult {
                 NavigationView {
-                    TravelPreferencesView(
-                        destination: voiceResult.destination,
-                        duration: voiceResult.duration,
-                        companions: voiceResult.companions,
+                    AnimatedPreferencesView(
+                        voiceResult: voiceResult,
                         onComplete: { preferences in
                             handlePreferencesComplete(preferences)
                         }
@@ -124,9 +123,12 @@ struct HomeView: View {
             }
             
             // Enhanced current trip card with agent activities
-            CurrentTripWithAgents(trip: trip) {
-                // Show detailed trip view
+            NavigationLink(destination: TripDetailView(trip: trip)) {
+                CurrentTripWithAgents(trip: trip) {
+                    // Navigation handled by NavigationLink
+                }
             }
+            .buttonStyle(PlainButtonStyle())
         }
     }
     
@@ -415,28 +417,28 @@ extension HomeView {
     
     var sampleCurrentTrip: UpcomingTrip? {
         UpcomingTrip(
-            destination: "Delhi, India",
+            destination: "Delhi Heritage Tour",
             departureDate: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date(),
             returnDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(),
             duration: "3 days",
             status: .inProgress,
             imageUrl: nil,
-            budget: "₹15,000",
-            companions: 1,
+            budget: "₹15,000 (₹13,200 spent)",
+            companions: 2,
             participants: ["You", "Sarah"],
             progress: TripProgress(
-                totalSteps: 8,
-                completedSteps: 6,
-                currentAction: "Enjoying Red Fort visit",
-                nextAction: "Dinner at Karim's",
-                estimatedCompletion: "Tomorrow 6 PM"
+                totalSteps: 10,
+                completedSteps: 8,
+                currentAction: "Preparing for Red Fort visit",
+                nextAction: "Red Fort exploration at 3:00 PM",
+                estimatedCompletion: "Day 3 of 3 - Final day"
             ),
             bookings: TripBookings(
                 flights: FlightBooking(
                     airline: "IndiGo",
                     flightNumber: "6E 142",
-                    departure: FlightSegment(airport: "Mumbai Airport", airportCode: "BOM", time: Date(), terminal: "T2"),
-                    arrival: FlightSegment(airport: "Delhi Airport", airportCode: "DEL", time: Date(), terminal: "T3"),
+                    departure: FlightSegment(airport: "Mumbai Airport", airportCode: "BOM", time: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(), terminal: "T2"),
+                    arrival: FlightSegment(airport: "Delhi Airport", airportCode: "DEL", time: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(), terminal: "T3"),
                     price: "₹4,500",
                     status: .confirmed,
                     bookingReference: "ABC123"
@@ -446,7 +448,7 @@ extension HomeView {
                 transport: [],
                 activities: []
             ),
-            notes: "Having an amazing time exploring Delhi's historical sites!"
+            notes: "Day 3 of 3 - All planning complete, only monitoring agents active"
         )
     }
     
