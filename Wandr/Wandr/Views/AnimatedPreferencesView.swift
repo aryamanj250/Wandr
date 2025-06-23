@@ -17,24 +17,24 @@ struct AnimatedPreferencesView: View {
     @State private var selectedDietary: Set<String> = []
     @State private var customDietary = ""
     @State private var showSummary = false
-    
+
     let voiceResult: VoiceInputResult
     let onComplete: (TravelPreferences) -> Void
-    
+
     var body: some View {
         ZStack {
             // Background
             ButlerBackground()
                 .edgesIgnoringSafeArea(.all)
-            
+
             VStack(spacing: 0) {
                 // Progress indicator
                 progressIndicator
-                
+
                 // Question content
                 questionContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
+
                 // Navigation buttons
                 navigationButtons
             }
@@ -49,7 +49,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var progressIndicator: some View {
         VStack(spacing: 12) {
             // Trip context
@@ -58,11 +58,11 @@ struct AnimatedPreferencesView: View {
                     .font(.custom("Futura", size: 20))
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
-                
+
                 Text(voiceResult.destination)
                     .font(.custom("Futura", size: 16))
                     .foregroundStyle(.blue)
-                
+
                 HStack(spacing: 16) {
                     Label("\(voiceResult.duration) days", systemImage: "calendar")
                     Label("\(voiceResult.companions) people", systemImage: "person.3.fill")
@@ -70,12 +70,12 @@ struct AnimatedPreferencesView: View {
                 .font(.custom("Futura", size: 12))
                 .foregroundStyle(.white.opacity(0.7))
             }
-            
+
             // Progress bar
             HStack(spacing: 8) {
                 ForEach(0..<PreferenceQuestion.allCases.count, id: \.self) { index in
                     let isActive = index <= currentQuestion.rawValue
-                    
+
                     Circle()
                         .fill(isActive ? .blue : .white.opacity(0.3))
                         .frame(width: 8, height: 8)
@@ -83,7 +83,7 @@ struct AnimatedPreferencesView: View {
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isActive)
                 }
             }
-            
+
             Text("Question \(currentQuestion.rawValue + 1) of \(PreferenceQuestion.allCases.count)")
                 .font(.custom("Futura", size: 12))
                 .foregroundStyle(.white.opacity(0.6))
@@ -100,7 +100,7 @@ struct AnimatedPreferencesView: View {
         .padding(.horizontal, 20)
         .padding(.top, 20)
     }
-    
+
     @ViewBuilder
     private var questionContent: some View {
         if showSummary {
@@ -122,40 +122,20 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     // MARK: - Question Views
-    
+
     private var startQuestion: some View {
         QuestionContainer(
             title: "Let's plan your perfect trip!",
             subtitle: "I'll ask you a few quick questions to understand your preferences."
         ) {
             VStack(spacing: 16) {
-                Text("Based on your request:")
-                    .font(.custom("Futura", size: 16))
-                    .foregroundStyle(.white.opacity(0.8))
-                
-                VStack(spacing: 8) {
-                    Text("\"\\(voiceResult.originalInput)\"")
-                        .font(.custom("Futura", size: 14))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .italic()
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.white.opacity(0.05))
-                        )
-                }
-                
-                Text("Let's dive into the details!")
-                    .font(.custom("Futura", size: 16))
-                    .fontWeight(.medium)
-                    .foregroundStyle(.white)
-                    .padding(.top)
+                // Clean start without showing original input
             }
         }
     }
-    
+
     private var budgetQuestion: some View {
         QuestionContainer(
             title: "What's your budget range?",
@@ -174,16 +154,16 @@ struct AnimatedPreferencesView: View {
                                     .font(.custom("Futura", size: 16))
                                     .fontWeight(.semibold)
                                     .foregroundStyle(.white)
-                                
+
                                 if budget.rawValue.contains("(") {
                                     Text("(\(budget.rawValue.components(separatedBy: " (").last?.replacingOccurrences(of: ")", with: "") ?? "")")
                                         .font(.custom("Futura", size: 14))
                                         .foregroundStyle(.white.opacity(0.7))
                                 }
                             }
-                            
+
                             Spacer()
-                            
+
                             if selectedBudget == budget {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 24))
@@ -209,7 +189,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var accommodationQuestion: some View {
         QuestionContainer(
             title: "What's your accommodation style?",
@@ -226,7 +206,7 @@ struct AnimatedPreferencesView: View {
                             Image(systemName: accommodation.icon)
                                 .font(.system(size: 32))
                                 .foregroundStyle(selectedAccommodation == accommodation ? .blue : .white.opacity(0.7))
-                            
+
                             Text(accommodation.rawValue)
                                 .font(.custom("Futura", size: 14))
                                 .fontWeight(.medium)
@@ -249,7 +229,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var activitiesQuestion: some View {
         QuestionContainer(
             title: "What experiences interest you?",
@@ -270,7 +250,7 @@ struct AnimatedPreferencesView: View {
                             Image(systemName: activity.icon)
                                 .font(.system(size: 16))
                                 .foregroundStyle(selectedActivities.contains(activity) ? .orange : .white.opacity(0.7))
-                            
+
                             Text(activity.rawValue)
                                 .font(.custom("Futura", size: 13))
                                 .fontWeight(.medium)
@@ -293,7 +273,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var transportQuestion: some View {
         QuestionContainer(
             title: "How would you like to get there?",
@@ -310,7 +290,7 @@ struct AnimatedPreferencesView: View {
                             Image(systemName: transport.icon)
                                 .font(.system(size: 24))
                                 .foregroundStyle(selectedTransport == transport ? .purple : .white.opacity(0.7))
-                            
+
                             Text(transport.rawValue)
                                 .font(.custom("Futura", size: 11))
                                 .fontWeight(.medium)
@@ -333,7 +313,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var dietaryQuestion: some View {
         QuestionContainer(
             title: "Any dietary preferences?",
@@ -370,7 +350,7 @@ struct AnimatedPreferencesView: View {
                         .buttonStyle(ScaleButtonStyle())
                     }
                 }
-                
+
                 // None option
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -397,7 +377,7 @@ struct AnimatedPreferencesView: View {
             }
         }
     }
-    
+
     private var summaryView: some View {
         VStack(spacing: 24) {
             // Header
@@ -406,12 +386,12 @@ struct AnimatedPreferencesView: View {
                     .font(.custom("Futura", size: 24))
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
-                
+
                 Text("Let me deploy AI agents to make this amazing")
                     .font(.custom("Futura", size: 16))
                     .foregroundStyle(.white.opacity(0.8))
             }
-            
+
             ScrollView {
                 VStack(spacing: 16) {
                     // Trip overview
@@ -422,7 +402,7 @@ struct AnimatedPreferencesView: View {
                             summaryRow(label: "Travelers", value: "\(voiceResult.companions) people")
                         }
                     }
-                    
+
                     // Budget & accommodation
                     summaryCard(title: "Budget & Stay", icon: "creditcard.fill", color: .green) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -431,7 +411,7 @@ struct AnimatedPreferencesView: View {
                             summaryRow(label: "Transport", value: selectedTransport.rawValue)
                         }
                     }
-                    
+
                     // Activities
                     if !selectedActivities.isEmpty {
                         summaryCard(title: "Experiences", icon: "star.fill", color: .orange) {
@@ -450,7 +430,7 @@ struct AnimatedPreferencesView: View {
                             }
                         }
                     }
-                    
+
                     // Dietary
                     if !selectedDietary.isEmpty || !customDietary.isEmpty {
                         summaryCard(title: "Dietary", icon: "fork.knife", color: .red) {
@@ -470,7 +450,7 @@ struct AnimatedPreferencesView: View {
                     }
                 }
             }
-            
+
             // Deploy button
             Button(action: {
                 let preferences = createPreferences()
@@ -479,11 +459,11 @@ struct AnimatedPreferencesView: View {
                 HStack {
                     Image(systemName: "brain.head.profile")
                         .font(.system(size: 18))
-                    
+
                     Text("Deploy AI Agents")
                         .font(.custom("Futura", size: 18))
                         .fontWeight(.semibold)
-                    
+
                     Image(systemName: "arrow.right")
                         .font(.system(size: 14))
                 }
@@ -497,27 +477,27 @@ struct AnimatedPreferencesView: View {
                 )
             }
             .buttonStyle(ScaleButtonStyle())
-            
+
             Spacer()
         }
         .padding(.horizontal, 20)
     }
-    
+
     // MARK: - Helper Views
-    
+
     private func summaryCard<Content: View>(title: String, icon: String, color: Color, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 16))
                     .foregroundStyle(color)
-                
+
                 Text(title)
                     .font(.custom("Futura", size: 16))
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
             }
-            
+
             content()
         }
         .padding(16)
@@ -530,22 +510,22 @@ struct AnimatedPreferencesView: View {
                 )
         )
     }
-    
+
     private func summaryRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.custom("Futura", size: 14))
                 .foregroundStyle(.white.opacity(0.7))
-            
+
             Spacer()
-            
+
             Text(value)
                 .font(.custom("Futura", size: 14))
                 .fontWeight(.medium)
                 .foregroundStyle(.white)
         }
     }
-    
+
     private var navigationButtons: some View {
         HStack(spacing: 16) {
             if currentQuestion != .start {
@@ -574,9 +554,9 @@ struct AnimatedPreferencesView: View {
                 }
                 .buttonStyle(ScaleButtonStyle())
             }
-            
+
             Spacer()
-            
+
             if !showSummary {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -591,7 +571,7 @@ struct AnimatedPreferencesView: View {
                         Text(currentQuestion == .dietary ? "Review" : "Next")
                             .font(.custom("Futura", size: 16))
                             .fontWeight(.medium)
-                        
+
                         Image(systemName: "chevron.right")
                             .font(.system(size: 14))
                     }
@@ -611,7 +591,7 @@ struct AnimatedPreferencesView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 30)
     }
-    
+
     private var canProceed: Bool {
         switch currentQuestion {
         case .start: return true
@@ -622,13 +602,13 @@ struct AnimatedPreferencesView: View {
         case .dietary: return true
         }
     }
-    
+
     private func createPreferences() -> TravelPreferences {
         var allDietary = Array(selectedDietary)
         if !customDietary.isEmpty {
             allDietary.append(customDietary)
         }
-        
+
         return TravelPreferences(
             destination: voiceResult.destination,
             duration: voiceResult.duration,
@@ -648,7 +628,7 @@ struct QuestionContainer<Content: View>: View {
     let title: String
     let subtitle: String
     @ViewBuilder let content: Content
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -658,14 +638,14 @@ struct QuestionContainer<Content: View>: View {
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
-                    
+
                     Text(subtitle)
                         .font(.custom("Futura", size: 16))
                         .foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 20)
-                
+
                 content
                     .padding(.bottom, 20)
             }

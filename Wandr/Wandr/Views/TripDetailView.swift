@@ -97,7 +97,7 @@ struct TripDetailView: View {
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
 
-                        Label("\\(trip.companions) people", systemImage: "person.3.fill")
+                        Label("\(trip.companions) people", systemImage: "person.3.fill")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
 
@@ -120,7 +120,7 @@ struct TripDetailView: View {
 
                         Spacer()
 
-                        Text("\\(Int(trip.progress.progressPercentage * 100))% Complete")
+                        Text("\(Int(trip.progress.progressPercentage * 100))% Complete")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.8))
                     }
@@ -195,7 +195,7 @@ struct TripDetailView: View {
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
 
-                    Label("\\(trip.companions) people", systemImage: "person.3.fill")
+                    Label("\(trip.companions) people", systemImage: "person.3.fill")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
 
@@ -213,7 +213,7 @@ struct TripDetailView: View {
 
                     Spacer()
 
-                    Text("\\(Int(trip.progress.progressPercentage * 100))% Complete")
+                    Text("\(Int(trip.progress.progressPercentage * 100))% Complete")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.8))
                 }
