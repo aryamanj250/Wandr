@@ -111,85 +111,188 @@ struct TasksView: View {
         )
     }
     
-    private var filteredTasks: [ButlerTask] {
-        switch selectedFilter {
-        case .all:
-            return sampleTasks
-        case .urgent:
-            return sampleTasks.filter { $0.priority == .urgent }
-        case .today:
-            return sampleTasks.filter { $0.dueTime?.contains("PM") == true || $0.dueTime?.contains("AM") == true }
-        case .actionable:
-            return sampleTasks.filter { $0.actionable }
-        }
+    // Agent task data sources
+    private var currentTripAgentTasks: [AgentActivity] {
+        [
+            AgentActivity(
+                agentType: .weather,
+                status: .active,
+                currentTask: "Clear skies detected - perfect for Red Fort photos",
+                lastUpdate: "1 minute ago",
+                progress: 1.0
+            ),
+            AgentActivity(
+                agentType: .traffic,
+                status: .active,
+                currentTask: "Suggesting 2:30 PM departure to avoid traffic",
+                lastUpdate: "30 seconds ago",
+                progress: 1.0
+            )
+        ]
+    }
+    
+    private var upcomingTripAgentTasks: [AgentActivity] {
+        [
+            AgentActivity(
+                agentType: .booking,
+                status: .active,
+                currentTask: "Researching best beach resorts in Goa under ₹5k budget",
+                lastUpdate: "2 minutes ago",
+                progress: 0.3
+            ),
+            AgentActivity(
+                agentType: .activity,
+                status: .active,
+                currentTask: "Finding offbeat places and beer spots in Goa",
+                lastUpdate: "3 minutes ago",
+                progress: 0.6
+            ),
+            AgentActivity(
+                agentType: .transport,
+                status: .waiting,
+                currentTask: "Monitoring flight prices for Goa departure",
+                lastUpdate: "5 minutes ago",
+                progress: 0.1
+            )
+        ]
+    }
+    
+    private var completedAgentTasks: [AgentActivity] {
+        [
+            AgentActivity(
+                agentType: .booking,
+                status: .completed,
+                currentTask: "All Delhi trip reservations confirmed (Karim's, Red Fort, transport)",
+                lastUpdate: "2 days ago",
+                progress: 1.0
+            ),
+            AgentActivity(
+                agentType: .activity,
+                status: .completed,
+                currentTask: "All Delhi activity tickets secured and timing optimized",
+                lastUpdate: "2 days ago",
+                progress: 1.0
+            ),
+            AgentActivity(
+                agentType: .hotel,
+                status: .completed,
+                currentTask: "Hotel Maidens booked with room upgrade negotiated",
+                lastUpdate: "3 days ago",
+                progress: 1.0
+            )
+        ]
     }
     
     private func taskCount(for filter: TaskFilter) -> Int {
+        let allTasks = currentTripAgentTasks + upcomingTripAgentTasks + completedAgentTasks
+        
         switch filter {
         case .all:
-            return sampleTasks.count
+            return allTasks.count
         case .urgent:
-            return sampleTasks.filter { $0.priority == .urgent }.count
+            return allTasks.filter { $0.status == .active && $0.agentType == .weather || $0.agentType == .traffic }.count
         case .today:
-            return sampleTasks.filter { $0.dueTime?.contains("PM") == true || $0.dueTime?.contains("AM") == true }.count
+            return currentTripAgentTasks.count
         case .actionable:
-            return sampleTasks.filter { $0.actionable }.count
+            return allTasks.filter { $0.status == .active }.count
         }
     }
     
-    private var sampleTasks: [ButlerTask] {
-        [
-            ButlerTask(
-                title: "Get taxi to restaurant",
-                description: "Book ride to La Bernardin for 8:00 PM reservation",
-                priority: .high,
-                dueTime: "7:30 PM",
-                category: .transport,
-                actionable: true,
-                icon: "car.fill",
-                estimatedDuration: "5 min"
-            ),
-            ButlerTask(
-                title: "Check-in reminder",
-                description: "Flight check-in opens in 2 hours",
-                priority: .urgent,
-                dueTime: "6:00 PM",
-                category: .travel,
-                actionable: true,
-                icon: "airplane",
-                estimatedDuration: "2 min"
-            ),
-            ButlerTask(
-                title: "Pack essentials",
-                description: "Don't forget charger and travel documents",
-                priority: .medium,
-                dueTime: "Tomorrow",
-                category: .reminder,
-                actionable: false,
-                icon: "suitcase.fill",
-                estimatedDuration: "15 min"
-            ),
-            ButlerTask(
-                title: "Confirm hotel reservation",
-                description: "Call Marriott to confirm check-in time",
-                priority: .high,
-                dueTime: "2:00 PM",
-                category: .travel,
-                actionable: true,
-                icon: "building.2.fill",
-                estimatedDuration: "3 min"
-            ),
-            ButlerTask(
-                title: "Buy travel insurance",
-                description: "Compare and purchase travel insurance for Tokyo trip",
-                priority: .medium,
-                dueTime: "This week",
-                category: .travel,
-                actionable: true,
-                icon: "shield.fill",
-                estimatedDuration: "20 min"
-            )
-        ]
+    // Agent task section builder
+    private func agentTaskSection(title: String, tasks: [AgentActivity], color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text(title)
+                    .font(.custom("Futura", size: 18))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                
+                Spacer()
+                
+                Text("\(tasks.count) agents")
+                    .font(.custom("Futura", size: 12))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            
+            VStack(spacing: 12) {
+                ForEach(tasks) { task in
+                    AgentTaskRow(task: task)
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// Agent Task Row
+struct AgentTaskRow: View {
+    let task: AgentActivity
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Agent type icon
+            ZStack {
+                Circle()
+                    .fill(task.agentType.color.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: task.agentType.icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(task.agentType.color)
+            }
+            
+            // Task details
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("\(task.agentType.rawValue) Agent")
+                        .font(.custom("Futura", size: 14))
+                        .fontWeight(.medium)
+                        .foregroundStyle(.white)
+                    
+                    Spacer()
+                    
+                    // Status badge
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(task.status.color)
+                            .frame(width: 6, height: 6)
+                        
+                        Text(task.status.rawValue)
+                            .font(.custom("Futura", size: 10))
+                            .foregroundStyle(task.status.color)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                Text(task.currentTask)
+                    .font(.custom("Futura", size: 12))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .lineLimit(2)
+                
+                HStack {
+                    Text(task.lastUpdate)
+                        .font(.custom("Futura", size: 11))
+                        .foregroundStyle(.white.opacity(0.5))
+                    
+                    Spacer()
+                    
+                    if task.status == .active {
+                        ProgressView(value: task.progress)
+                            .tint(task.agentType.color)
+                            .frame(width: 60)
+                            .scaleEffect(y: 0.8)
+                    }
+                }
+            }
+        }
     }
 }
 
