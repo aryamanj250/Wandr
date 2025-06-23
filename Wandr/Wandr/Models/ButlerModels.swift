@@ -127,7 +127,7 @@ struct FlightSegment {
 
 // Hotel Option model
 struct HotelOption: Identifiable {
-    let id = UUID()
+    let id: UUID
     let name: String
     let rating: Double
     let pricePerNight: String
@@ -140,6 +140,22 @@ struct HotelOption: Identifiable {
     let roomType: String
     let isRecommended: Bool
     let distance: String
+    
+    init(name: String, rating: Double, pricePerNight: String, totalPrice: String, location: String, amenities: [String], images: [String], checkIn: Date, checkOut: Date, roomType: String, isRecommended: Bool, distance: String) {
+        self.id = UUID()
+        self.name = name
+        self.rating = rating
+        self.pricePerNight = pricePerNight
+        self.totalPrice = totalPrice
+        self.location = location
+        self.amenities = amenities
+        self.images = images
+        self.checkIn = checkIn
+        self.checkOut = checkOut
+        self.roomType = roomType
+        self.isRecommended = isRecommended
+        self.distance = distance
+    }
 }
 
 // Transport Booking model

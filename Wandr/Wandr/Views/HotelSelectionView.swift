@@ -153,7 +153,6 @@ struct HotelSelectionView: View {
     private var sampleHotelOptions: [HotelOption] {
         [
             HotelOption(
-                id: UUID(),
                 name: "Taj Resort & Spa",
                 rating: 4.8,
                 pricePerNight: "₹6,500",
@@ -168,7 +167,6 @@ struct HotelSelectionView: View {
                 distance: "50m from beach"
             ),
             HotelOption(
-                id: UUID(),
                 name: "Casa De Goa",
                 rating: 4.5,
                 pricePerNight: "₹4,200",

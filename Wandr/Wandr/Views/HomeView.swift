@@ -395,11 +395,11 @@ struct HomeView: View {
             progress: 0.3,
             estimatedTime: "2-3 minutes",
             steps: [
-                ActionStep(id: UUID(), title: "Searching flights", description: "Finding best flight options from Delhi to Goa", isCompleted: true, isActive: false, duration: "30s"),
-                ActionStep(id: UUID(), title: "Comparing hotels", description: "Analyzing 50+ hotels based on your preferences", isCompleted: true, isActive: false, duration: "45s"),
-                ActionStep(id: UUID(), title: "Booking recommendations", description: "Preparing personalized recommendations", isCompleted: false, isActive: true, duration: "60s"),
-                ActionStep(id: UUID(), title: "Creating itinerary", description: "Building day-by-day activities", isCompleted: false, isActive: false, duration: "45s"),
-                ActionStep(id: UUID(), title: "Final review", description: "Preparing options for your approval", isCompleted: false, isActive: false, duration: "30s")
+                ActionStep(title: "Searching flights", description: "Finding best flight options from Delhi to Goa", isCompleted: true, isActive: false, duration: "30s"),
+                ActionStep(title: "Comparing hotels", description: "Analyzing 50+ hotels based on your preferences", isCompleted: true, isActive: false, duration: "45s"),
+                ActionStep(title: "Booking recommendations", description: "Preparing personalized recommendations", isCompleted: false, isActive: true, duration: "60s"),
+                ActionStep(title: "Creating itinerary", description: "Building day-by-day activities", isCompleted: false, isActive: false, duration: "45s"),
+                ActionStep(title: "Final review", description: "Preparing options for your approval", isCompleted: false, isActive: false, duration: "30s")
             ],
             result: nil
         )
@@ -511,7 +511,6 @@ extension HomeView {
             ),
             bookings: TripBookings(
                 flights: FlightBooking(
-                    id: UUID(),
                     airline: "IndiGo",
                     flightNumber: "6E 142",
                     departure: FlightSegment(airport: "Mumbai Airport", airportCode: "BOM", time: Date(), terminal: "T2"),
