@@ -45,14 +45,6 @@ struct LaunchScreen: View {
                         .foregroundStyle(.white.opacity(0.7))
                         .opacity(logoOpacity * 0.7)
                         .offset(y: subtitleOffset)
-                    
-                    Text("- minimalist -")
-                        .font(.custom("Futura", size: 14))
-                        .italic()
-                        .tracking(1)
-                        .foregroundStyle(.white.opacity(0.5))
-                        .opacity(logoOpacity * 0.5)
-                        .offset(y: subtitleOffset * 2)
                 }
             }
         }
