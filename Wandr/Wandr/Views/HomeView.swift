@@ -17,31 +17,40 @@ struct HomeView: View {
     @State private var voiceButtonScale: CGFloat = 1.0
     @State private var glassOpacity: Double = 1.0
     @State private var showVoiceAnimation = false
-    
+
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-    
+
     var body: some View {
         ZStack {
             // Background
             ButlerBackground()
                 .edgesIgnoringSafeArea(.all)
-            
+
             // Main content
             ScrollView {
                 VStack(spacing: 30) {
                     // App title
                     appTitleSection
                         .padding(.top, 20)
-                    
+
+                    // Voice prompt and button at top
+                    VStack(spacing: 16) {
+                        Text("Ready to plan your next trip?")
+                            .font(.custom("Futura", size: 18))
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+
+                        // Glass voice button
+                        glassVoiceButton
+                    }
+                    .padding(.vertical, 20)
+
                     // Current trip with live agent activities
                     if let currentTrip = sampleCurrentTrip {
                         currentTripWithAgents(currentTrip)
                     }
-                    
-                    // Glass voice button - central focus
-                    glassVoiceButton
-                        .padding(.vertical, 20)
-                    
+
                     // Only show upcoming trips after voice planning creates them
                     if !upcomingTrips.isEmpty {
                         upcomingTripsSection
@@ -50,12 +59,12 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 100)
             }
-            
+
             // Voice interface overlay
             if showVoiceInterface {
                 voiceInterfaceOverlay
             }
-            
+
             // Preferences selection overlay
             if showPreferencesSelection, let voiceResult = voiceInputResult {
                 NavigationView {
@@ -76,21 +85,30 @@ struct HomeView: View {
             currentTime = Date()
         }
     }
-    
+
     // MARK: - App Title Section
     private var appTitleSection: some View {
-        VStack(spacing: 8) {
-            Text("Wandr")
-                .font(.custom("Futura", size: 32))
-                .fontWeight(.bold)
-                .foregroundStyle(.white)
-            
-            Text("AI Travel Concierge")
-                .font(.custom("Futura", size: 16))
-                .foregroundStyle(.white.opacity(0.7))
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Wandr")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+
+                Spacer()
+            }
+
+            HStack {
+                Text("AI Travel Concierge")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.7))
+
+                Spacer()
+            }
         }
+        .padding(.horizontal, 4)
     }
-    
+
     // MARK: - Current Trip with Agent Activities
     private func currentTripWithAgents(_ trip: UpcomingTrip) -> some View {
         VStack(spacing: 20) {
@@ -100,9 +118,9 @@ struct HomeView: View {
                     .font(.custom("Futura", size: 20))
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
-                
+
                 Spacer()
-                
+
                 // Live indicator
                 HStack(spacing: 6) {
                     Circle()
@@ -113,7 +131,7 @@ struct HomeView: View {
                                 .stroke(.green.opacity(0.3), lineWidth: 2)
                                 .scaleEffect(1.5)
                         )
-                    
+
                     Text("AGENTS ACTIVE")
                         .font(.custom("Futura", size: 10))
                         .fontWeight(.bold)
@@ -121,7 +139,7 @@ struct HomeView: View {
                         .tracking(1)
                 }
             }
-            
+
             // Enhanced current trip card with agent activities
             NavigationLink(destination: TripDetailView(trip: trip)) {
                 CurrentTripWithAgents(trip: trip) {
@@ -131,7 +149,7 @@ struct HomeView: View {
             .buttonStyle(PlainButtonStyle())
         }
     }
-    
+
     // MARK: - Voice Interface Overlay
     private var voiceInterfaceOverlay: some View {
         ZStack {
@@ -145,17 +163,17 @@ struct HomeView: View {
                         resetVoiceButton()
                     }
                 }
-            
+
             // Voice interface
             VStack(spacing: 0) {
                 Spacer()
-                
+
                 // Close handle
                 RoundedRectangle(cornerRadius: 3)
                     .fill(.white.opacity(0.3))
                     .frame(width: 40, height: 6)
                     .padding(.bottom, 20)
-                
+
                 // Voice interface content
                 MainViewContent(onComplete: { response in
                     handleVoiceResponse(response)
@@ -182,7 +200,7 @@ struct HomeView: View {
             removal: .move(edge: .bottom).combined(with: .opacity)
         ))
     }
-    
+
     // MARK: - Glass Voice Button
     private var glassVoiceButton: some View {
         Button(action: {
@@ -191,7 +209,7 @@ struct HomeView: View {
                 voiceButtonScale = 1.2
                 glassOpacity = 0.7
             }
-            
+
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.easeInOut(duration: 0.4)) {
                     showVoiceInterface = true
@@ -205,7 +223,7 @@ struct HomeView: View {
                     .frame(width: 120, height: 120)
                     .scaleEffect(showVoiceAnimation ? 1.3 : 1.0)
                     .opacity(showVoiceAnimation ? 0 : 1)
-                
+
                 // Main button
                 Circle()
                     .fill(.black.opacity(0.3))
@@ -220,7 +238,7 @@ struct HomeView: View {
                             Image(systemName: "mic.fill")
                                 .font(.system(size: 32))
                                 .foregroundStyle(.white)
-                            
+
                             Text("Plan Trip")
                                 .font(.custom("Futura", size: 12))
                                 .foregroundStyle(.white.opacity(0.8))
@@ -228,7 +246,7 @@ struct HomeView: View {
                     )
                     .scaleEffect(voiceButtonScale)
                     .opacity(glassOpacity)
-                
+
                 // Pulsing animation
                 if showVoiceAnimation {
                     ForEach(0..<3) { i in
@@ -249,9 +267,9 @@ struct HomeView: View {
         }
         .buttonStyle(ScaleButtonStyle())
     }
-    
-    
-    
+
+
+
     // MARK: - Upcoming Trips Section
     private var upcomingTripsSection: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -260,7 +278,7 @@ struct HomeView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 5)
-            
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
                     ForEach(upcomingTrips) { trip in
@@ -271,31 +289,31 @@ struct HomeView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Functions
-    
-    
+
+
     private func formatCurrentTime() -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: currentTime)
     }
-    
+
     private func resetVoiceButton() {
         showVoiceAnimation = false
         voiceButtonScale = 1.0
         glassOpacity = 1.0
     }
-    
+
     private func handleVoiceResponse(_ response: String) {
         // Parse voice input and extract trip details
         let voiceResult = parseVoiceInput(response)
-        
+
         withAnimation(.easeOut(duration: 0.3)) {
             showVoiceInterface = false
             resetVoiceButton()
         }
-        
+
         // Show preferences selection after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             voiceInputResult = voiceResult
@@ -304,15 +322,15 @@ struct HomeView: View {
             }
         }
     }
-    
+
     private func parseVoiceInput(_ input: String) -> VoiceInputResult {
         // Simple parsing logic - in real app this would be more sophisticated
         let lowercased = input.lowercased()
-        
+
         var destination = "Unknown Destination"
         var duration = 3
         var companions = 2
-        
+
         // Extract destination
         if lowercased.contains("goa") {
             destination = "Goa, India"
@@ -327,7 +345,7 @@ struct HomeView: View {
         } else if lowercased.contains("london") {
             destination = "London, UK"
         }
-        
+
         // Extract duration
         if lowercased.contains("week") {
             duration = 7
@@ -338,7 +356,7 @@ struct HomeView: View {
         } else if lowercased.contains("5 day") || lowercased.contains("five day") {
             duration = 5
         }
-        
+
         // Extract companions
         if lowercased.contains("solo") || lowercased.contains("alone") {
             companions = 1
@@ -349,7 +367,7 @@ struct HomeView: View {
         } else if lowercased.contains("friends") {
             companions = 4
         }
-        
+
         return VoiceInputResult(
             destination: destination,
             duration: duration,
@@ -357,12 +375,12 @@ struct HomeView: View {
             originalInput: input
         )
     }
-    
+
     private func handlePreferencesComplete(_ preferences: TravelPreferences) {
         withAnimation(.easeOut(duration: 0.3)) {
             showPreferencesSelection = false
         }
-        
+
         // Create new trip from preferences
         let newTrip = UpcomingTrip(
             destination: preferences.destination,
@@ -384,18 +402,18 @@ struct HomeView: View {
             bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
             notes: "AI agents working on \(preferences.activityPreferences.map { $0.rawValue }.joined(separator: ", ")) experiences"
         )
-        
+
         // Add to upcoming trips
         withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
             upcomingTrips.append(newTrip)
         }
     }
-    
+
     private func generateParticipantNames(count: Int) -> [String] {
         let names = ["You", "Friend", "Sarah", "Mike", "Priya", "Alex", "Emma", "Rahul"]
         return Array(names.prefix(count))
     }
-    
+
 }
 
 // MARK: - Supporting Views and Models
@@ -411,7 +429,7 @@ struct VoiceInputResult {
 // Butler Background
 struct ButlerBackground: View {
     @State private var animateGradient = false
-    
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -428,7 +446,7 @@ struct ButlerBackground: View {
                     animateGradient.toggle()
                 }
             }
-            
+
             // Subtle pattern overlay
             Circle()
                 .fill(.white.opacity(0.02))
@@ -442,7 +460,7 @@ struct ButlerBackground: View {
 
 // Sample Data
 extension HomeView {
-    
+
     var sampleCurrentTrip: UpcomingTrip? {
         UpcomingTrip(
             destination: "Delhi Heritage Tour",
@@ -479,7 +497,7 @@ extension HomeView {
             notes: "Day 3 of 3 - All planning complete, only monitoring agents active"
         )
     }
-    
+
     var sampleTrips: [UpcomingTrip] {
         // Initially empty - trips will be added after voice planning
         []
