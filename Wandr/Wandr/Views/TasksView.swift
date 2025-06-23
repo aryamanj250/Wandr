@@ -22,11 +22,22 @@ struct TasksView: View {
                     // Filter tabs
                     filterTabs
                     
-                    // Tasks list
+                    // Agent Tasks list
                     ScrollView {
-                        LazyVStack(spacing: 15) {
-                            ForEach(filteredTasks) { task in
-                                TaskCard(task: task)
+                        LazyVStack(spacing: 20) {
+                            // Current trip agent tasks
+                            if !currentTripAgentTasks.isEmpty {
+                                agentTaskSection(title: "Delhi Trip - Active Agents", tasks: currentTripAgentTasks, color: .green)
+                            }
+                            
+                            // Upcoming trip agent tasks
+                            if !upcomingTripAgentTasks.isEmpty {
+                                agentTaskSection(title: "Goa Trip - Planning Agents", tasks: upcomingTripAgentTasks, color: .orange)
+                            }
+                            
+                            // Completed agent tasks
+                            if !completedAgentTasks.isEmpty {
+                                agentTaskSection(title: "Recently Completed", tasks: completedAgentTasks, color: .blue)
                             }
                         }
                         .padding(.horizontal, 20)

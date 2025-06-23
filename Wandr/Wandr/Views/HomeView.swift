@@ -43,7 +43,7 @@ struct HomeView: View {
                         .padding(.vertical, 20)
                     
                     // Only show upcoming trips after voice planning creates them
-                    if !sampleTrips.isEmpty {
+                    if !upcomingTrips.isEmpty {
                         upcomingTripsSection
                     }
                 }
@@ -263,7 +263,7 @@ struct HomeView: View {
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
-                    ForEach(sampleTrips) { trip in
+                    ForEach(upcomingTrips) { trip in
                         TripWithAgentStatus(trip: trip)
                     }
                 }
@@ -363,9 +363,37 @@ struct HomeView: View {
             showPreferencesSelection = false
         }
         
-        // Add trip to the list (this would normally be handled by a data manager)
-        // For now, we'll simulate adding it to the upcoming trips
-        print("Trip preferences completed for \(preferences.destination)")
+        // Create new trip from preferences
+        let newTrip = UpcomingTrip(
+            destination: preferences.destination,
+            departureDate: Calendar.current.date(byAdding: .hour, value: 2, to: Date()) ?? Date(),
+            returnDate: Calendar.current.date(byAdding: .day, value: preferences.duration, to: Date()) ?? Date(),
+            duration: "\(preferences.duration) days",
+            status: .planning,
+            imageUrl: nil,
+            budget: preferences.budget.displayName,
+            companions: preferences.companions,
+            participants: generateParticipantNames(count: preferences.companions),
+            progress: TripProgress(
+                totalSteps: 8,
+                completedSteps: 0,
+                currentAction: nil,
+                nextAction: "Agents deploying to start planning",
+                estimatedCompletion: "Basic plan ready in 3 minutes"
+            ),
+            bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
+            notes: "AI agents working on \(preferences.activityPreferences.map { $0.rawValue }.joined(separator: ", ")) experiences"
+        )
+        
+        // Add to upcoming trips
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            upcomingTrips.append(newTrip)
+        }
+    }
+    
+    private func generateParticipantNames(count: Int) -> [String] {
+        let names = ["You", "Friend", "Sarah", "Mike", "Priya", "Alex", "Emma", "Rahul"]
+        return Array(names.prefix(count))
     }
     
 }

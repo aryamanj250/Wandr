@@ -19,15 +19,16 @@ struct TripDetailView: View {
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Header
-                tripHeader
-                
-                // Tab selector
+                // Tab selector (fixed)
                 tabSelector
                 
-                // Content
+                // Scrollable content including header
                 ScrollView {
                     VStack(spacing: 20) {
+                        // Header (now scrollable)
+                        tripHeader
+                        
+                        // Content
                         switch selectedTab {
                         case .timeline:
                             timelineContent
@@ -125,8 +126,6 @@ struct TripDetailView: View {
                         .stroke(.blue.opacity(0.3), lineWidth: 1)
                 )
         )
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
     }
     
     private var tabSelector: some View {
