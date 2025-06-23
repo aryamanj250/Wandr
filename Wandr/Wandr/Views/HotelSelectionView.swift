@@ -181,7 +181,6 @@ struct HotelSelectionView: View {
                 distance: "200m from beach"
             ),
             HotelOption(
-                id: UUID(),
                 name: "Blue Waves Resort",
                 rating: 4.6,
                 pricePerNight: "₹5,800",
