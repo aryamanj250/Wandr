@@ -10,7 +10,7 @@ import SwiftUI
 struct CurrentTripCard: View {
     let trip: UpcomingTrip
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 16) {
@@ -26,44 +26,44 @@ struct CurrentTripCard: View {
                                         .stroke(.green.opacity(0.3), lineWidth: 2)
                                         .scaleEffect(1.5)
                                 )
-                            
+
                             Text("LIVE")
                                 .font(.custom("Futura", size: 10))
                                 .fontWeight(.bold)
                                 .foregroundStyle(.green)
                                 .tracking(1)
                         }
-                        
+
                         Text(trip.destination)
                             .font(.custom("Futura", size: 22))
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
-                        
+
                         Text("Day \(dayNumber) of \(trip.duration)")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Progress")
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.white.opacity(0.6))
-                        
+
                         Text("\(Int(trip.progress.progressPercentage * 100))%")
                             .font(.custom("Futura", size: 18))
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
                     }
                 }
-                
+
                 // Progress bar
                 ProgressView(value: trip.progress.progressPercentage)
                     .tint(.blue)
                     .scaleEffect(y: 2)
                     .background(.white.opacity(0.1))
-                
+
                 // Current status
                 VStack(spacing: 12) {
                     if let currentAction = trip.progress.currentAction {
@@ -71,38 +71,38 @@ struct CurrentTripCard: View {
                             Image(systemName: "location.fill")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.blue)
-                            
+
                             Text("Now: \(currentAction)")
                                 .font(.custom("Futura", size: 14))
                                 .foregroundStyle(.white)
-                            
+
                             Spacer()
                         }
                     }
-                    
+
                     if let nextAction = trip.progress.nextAction {
                         HStack {
                             Image(systemName: "clock.fill")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.orange)
-                            
+
                             Text("Next: \(nextAction)")
                                 .font(.custom("Futura", size: 14))
                                 .foregroundStyle(.white.opacity(0.8))
-                            
+
                             Spacer()
                         }
                     }
                 }
-                
+
                 // Quick actions
                 HStack(spacing: 12) {
                     QuickActionButton(icon: "phone.fill", title: "Call Hotel", color: .green)
                     QuickActionButton(icon: "car.fill", title: "Book Ride", color: .blue)
                     QuickActionButton(icon: "map.fill", title: "Navigate", color: .orange)
-                    
+
                     Spacer()
-                    
+
                     Text("Ends \(formatReturnDate())")
                         .font(.custom("Futura", size: 12))
                         .foregroundStyle(.white.opacity(0.6))
@@ -121,17 +121,17 @@ struct CurrentTripCard: View {
                 .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
         )
     }
-    
+
     private var dayNumber: Int {
         let calendar = Calendar.current
         let days = calendar.dateComponents([.day], from: trip.departureDate, to: Date()).day ?? 0
         return max(1, days + 1)
     }
-    
+
     private func formatReturnDate() -> String {
         let formatter = DateFormatter()
         let calendar = Calendar.current
-        
+
         if calendar.isDateInToday(trip.returnDate) {
             return "today"
         } else if calendar.isDateInTomorrow(trip.returnDate) {
@@ -147,19 +147,19 @@ struct QuickActionButton: View {
     let icon: String
     let title: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
                 Circle()
                     .fill(color.opacity(0.2))
                     .frame(width: 36, height: 36)
-                
+
                 Image(systemName: icon)
                     .font(.system(size: 14))
                     .foregroundStyle(color)
             }
-            
+
             Text(title)
                 .font(.custom("Futura", size: 10))
                 .foregroundStyle(.white.opacity(0.7))
@@ -171,7 +171,7 @@ struct QuickActionButton: View {
 struct NextTripPreview: View {
     let trip: UpcomingTrip
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -183,44 +183,44 @@ struct NextTripPreview: View {
                             .fontWeight(.bold)
                             .foregroundStyle(.orange)
                             .tracking(1)
-                        
+
                         Spacer()
-                        
+
                         Text(daysUntilTrip())
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.white.opacity(0.6))
                     }
-                    
+
                     Text(trip.destination)
                         .font(.custom("Futura", size: 18))
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
-                    
+
                     Text("\(trip.companions) people • \(trip.duration)")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
-                    
+
                     if let budget = trip.budget {
                         Text(budget)
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.green)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 // Action button
                 VStack(spacing: 8) {
                     ZStack {
                         Circle()
                             .fill(.orange.opacity(0.2))
                             .frame(width: 50, height: 50)
-                        
+
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.orange)
                     }
-                    
+
                     Text("Plan Trip")
                         .font(.custom("Futura", size: 11))
                         .foregroundStyle(.orange)
@@ -239,11 +239,11 @@ struct NextTripPreview: View {
                 )
         )
     }
-    
+
     private func daysUntilTrip() -> String {
         let calendar = Calendar.current
         let days = calendar.dateComponents([.day], from: Date(), to: trip.departureDate).day ?? 0
-        
+
         if days == 0 {
             return "Departing today"
         } else if days == 1 {
@@ -259,7 +259,7 @@ struct CurrentTripWithAgents: View {
     let trip: UpcomingTrip
     let action: () -> Void
     @State private var agentActivities: [AgentActivity] = []
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 20) {
@@ -275,44 +275,44 @@ struct CurrentTripWithAgents: View {
                                         .stroke(.green.opacity(0.3), lineWidth: 2)
                                         .scaleEffect(1.5)
                                 )
-                            
+
                             Text("LIVE")
                                 .font(.custom("Futura", size: 10))
                                 .fontWeight(.bold)
                                 .foregroundStyle(.green)
                                 .tracking(1)
                         }
-                        
+
                         Text(trip.destination)
                             .font(.custom("Futura", size: 22))
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
-                        
+
                         Text("Day \(dayNumber) of \(trip.duration)")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Progress")
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.white.opacity(0.6))
-                        
+
                         Text("\(Int(trip.progress.progressPercentage * 100))%")
                             .font(.custom("Futura", size: 18))
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
                     }
                 }
-                
+
                 // Progress bar
                 ProgressView(value: trip.progress.progressPercentage)
                     .tint(.blue)
                     .scaleEffect(y: 2)
                     .background(.white.opacity(0.1))
-                
+
                 // Live agent activities
                 VStack(spacing: 12) {
                     HStack {
@@ -325,25 +325,25 @@ struct CurrentTripWithAgents: View {
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.white.opacity(0.6))
                     }
-                    
+
                     VStack(spacing: 8) {
                         ForEach(agentActivities) { activity in
                             AgentActivityRow(activity: activity)
                         }
                     }
                 }
-                
+
                 // Current status
                 if let currentAction = trip.progress.currentAction {
                     HStack {
                         Image(systemName: "location.fill")
                             .font(.system(size: 14))
                             .foregroundStyle(.blue)
-                        
+
                         Text("Now: \(currentAction)")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white)
-                        
+
                         Spacer()
                     }
                 }
@@ -364,13 +364,13 @@ struct CurrentTripWithAgents: View {
             loadAgentActivities()
         }
     }
-    
+
     private var dayNumber: Int {
         let calendar = Calendar.current
         let days = calendar.dateComponents([.day], from: trip.departureDate, to: Date()).day ?? 0
         return max(1, days + 1)
     }
-    
+
     private func loadAgentActivities() {
         agentActivities = [
             AgentActivity(
@@ -408,99 +408,203 @@ struct CurrentTripWithAgents: View {
 // MARK: - Trip with Agent Status (for upcoming trips)
 struct TripWithAgentStatus: View {
     let trip: UpcomingTrip
-    
+
     var body: some View {
-        VStack(spacing: 16) {
-            // Trip header
-            VStack(alignment: .leading, spacing: 8) {
-                Text(trip.destination)
-                    .font(.custom("Futura", size: 18))
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                
-                Text("\(trip.companions) people • \(trip.duration)")
-                    .font(.custom("Futura", size: 14))
-                    .foregroundStyle(.white.opacity(0.7))
-                
-                if let budget = trip.budget {
-                    Text(budget)
-                        .font(.custom("Futura", size: 12))
-                        .foregroundStyle(.green)
-                }
-            }
-            
-            // Agent status
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Agent Status")
-                        .font(.custom("Futura", size: 12))
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white.opacity(0.8))
-                    Spacer()
-                }
-                
-                HStack(spacing: 12) {
-                    AgentStatusDot(type: .booking, status: .active)
-                    AgentStatusDot(type: .weather, status: .standby)
-                    AgentStatusDot(type: .restaurant, status: .standby)
-                    
-                    Spacer()
-                    
-                    // Autonomous indicator
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(.green)
-                            .frame(width: 6, height: 6)
-                            .overlay(
-                                Circle()
-                                    .stroke(.green.opacity(0.3), lineWidth: 1)
-                                    .scaleEffect(1.3)
-                            )
-                        
-                        Text("Auto")
-                            .font(.custom("Futura", size: 9))
+        NavigationLink(destination: GoaTripDetailView(trip: trip)) {
+            VStack(spacing: 16) {
+                // Trip header
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(trip.destination)
+                            .font(.custom("Futura", size: 18))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        // Status indicator
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(statusColor)
+                                .frame(width: 8, height: 8)
+
+                            Text(statusText)
+                                .font(.custom("Futura", size: 10))
+                                .fontWeight(.medium)
+                                .foregroundStyle(statusColor)
+                        }
+                    }
+
+                    Text("\(trip.companions) people • Airport by 12 PM")
+                        .font(.custom("Futura", size: 14))
+                        .foregroundStyle(.white.opacity(0.7))
+
+                    if isGoaTrip {
+                        Text("₹5,000 budget • Offbeat + Beer")
+                            .font(.custom("Futura", size: 12))
                             .foregroundStyle(.green)
-                            .fontWeight(.medium)
+                    } else if let budget = trip.budget {
+                        Text(budget)
+                            .font(.custom("Futura", size: 12))
+                            .foregroundStyle(.green)
                     }
                 }
-            }
-            
-            // Progress
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Planning Progress")
-                        .font(.custom("Futura", size: 12))
-                        .foregroundStyle(.white.opacity(0.6))
-                    Spacer()
-                    Text("\(Int(trip.progress.progressPercentage * 100))%")
-                        .font(.custom("Futura", size: 12))
-                        .fontWeight(.medium)
-                        .foregroundStyle(.white)
+
+                // Agent activity summary
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.blue)
+
+                        Text("\(activeAgentsCount) agents active")
+                            .font(.custom("Futura", size: 12))
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white)
+
+                        Spacer()
+
+                        Text(currentAgentActivity)
+                            .font(.custom("Futura", size: 10))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .lineLimit(1)
+                    }
+
+                    // Progress bar
+                    VStack(spacing: 4) {
+                        HStack {
+                            Text("Planning Progress")
+                                .font(.custom("Futura", size: 11))
+                                .foregroundStyle(.white.opacity(0.6))
+                            Spacer()
+                            Text("\(Int(trip.progress.progressPercentage * 100))%")
+                                .font(.custom("Futura", size: 11))
+                                .fontWeight(.medium)
+                                .foregroundStyle(.white)
+                        }
+
+                        ProgressView(value: trip.progress.progressPercentage)
+                            .tint(.orange)
+                            .scaleEffect(y: 1.2)
+                    }
                 }
-                
-                ProgressView(value: trip.progress.progressPercentage)
-                    .tint(.orange)
-                    .scaleEffect(y: 1.5)
+
+                // Quick agent status
+                HStack(spacing: 8) {
+                    ForEach(agentSummary, id: \.type) { agent in
+                        AgentMiniStatus(agent: agent)
+                    }
+
+                    Spacer()
+
+                    // Tap indicator
+                    Text("Tap for details")
+                        .font(.custom("Futura", size: 9))
+                        .foregroundStyle(.blue.opacity(0.7))
+                }
             }
+            .padding(16)
+            .frame(width: 300)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.orange.opacity(0.3), lineWidth: 1)
+                    )
+            )
         }
-        .padding(16)
-        .frame(width: 280)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(.orange.opacity(0.3), lineWidth: 1)
-                )
-        )
+        .buttonStyle(PlainButtonStyle())
     }
+
+    private var isGoaTrip: Bool {
+        trip.destination.contains("Goa") && trip.destination.contains("Offbeat")
+    }
+
+    private var statusColor: Color {
+        switch trip.status {
+        case .planning: return .orange
+        case .booked: return .yellow
+        case .confirmed: return .green
+        case .inProgress: return .blue
+        }
+    }
+
+    private var statusText: String {
+        switch trip.status {
+        case .planning: return "PLANNING"
+        case .booked: return "BOOKED"
+        case .confirmed: return "READY"
+        case .inProgress: return "LIVE"
+        }
+    }
+
+    private var activeAgentsCount: Int {
+        if isGoaTrip {
+            return 3 // Location, Weather, Budget agents active
+        }
+        return 2
+    }
+
+    private var currentAgentActivity: String {
+        if isGoaTrip {
+            return "Finding hidden spots..."
+        }
+        return "Working on reservations..."
+    }
+
+    private var agentSummary: [AgentSummary] {
+        if isGoaTrip {
+            return [
+                AgentSummary(type: .activity, status: .active, task: "Finding offbeat places"),
+                AgentSummary(type: .weather, status: .active, task: "Monitoring conditions"),
+                AgentSummary(type: .transport, status: .active, task: "Route planning"),
+                AgentSummary(type: .booking, status: .standby, task: "Ready for reservations")
+            ]
+        } else {
+            return [
+                AgentSummary(type: .booking, status: .active, task: "Making reservations"),
+                AgentSummary(type: .weather, status: .standby, task: "Monitoring"),
+                AgentSummary(type: .transport, status: .standby, task: "Planning routes")
+            ]
+        }
+    }
+}
+
+// MARK: - Supporting Mini Components
+struct AgentMiniStatus: View {
+    let agent: AgentSummary
+
+    var body: some View {
+        VStack(spacing: 2) {
+            ZStack {
+                Circle()
+                    .fill(agent.status.color.opacity(0.2))
+                    .frame(width: 16, height: 16)
+
+                Image(systemName: agent.type.icon)
+                    .font(.system(size: 8))
+                    .foregroundStyle(agent.status.color)
+            }
+
+            Text(agent.type.shortName)
+                .font(.custom("Futura", size: 7))
+                .foregroundStyle(.white.opacity(0.6))
+        }
+    }
+}
+
+struct AgentSummary {
+    let type: AgentType
+    let status: AgentStatus
+    let task: String
 }
 
 // MARK: - Supporting Views
 struct AgentActivityRow: View {
     let activity: AgentActivity
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Agent type icon
@@ -508,26 +612,26 @@ struct AgentActivityRow: View {
                 Circle()
                     .fill(activity.agentType.color.opacity(0.2))
                     .frame(width: 32, height: 32)
-                
+
                 Image(systemName: activity.agentType.icon)
                     .font(.system(size: 14))
                     .foregroundStyle(activity.agentType.color)
             }
-            
+
             // Activity details
             VStack(alignment: .leading, spacing: 2) {
                 Text(activity.currentTask)
                     .font(.custom("Futura", size: 13))
                     .foregroundStyle(.white)
                     .lineLimit(2)
-                
+
                 Text(activity.lastUpdate)
                     .font(.custom("Futura", size: 11))
                     .foregroundStyle(.white.opacity(0.5))
             }
-            
+
             Spacer()
-            
+
             // Status indicator
             Circle()
                 .fill(activity.status.color)
@@ -539,19 +643,19 @@ struct AgentActivityRow: View {
 struct AgentStatusDot: View {
     let type: AgentType
     let status: AgentStatus
-    
+
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
                 Circle()
                     .fill(status.color.opacity(0.2))
                     .frame(width: 24, height: 24)
-                
+
                 Image(systemName: type.icon)
                     .font(.system(size: 10))
                     .foregroundStyle(status.color)
             }
-            
+
             Text(type.shortName)
                 .font(.custom("Futura", size: 8))
                 .foregroundStyle(.white.opacity(0.6))

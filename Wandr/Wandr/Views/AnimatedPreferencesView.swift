@@ -10,16 +10,33 @@ import SwiftUI
 struct AnimatedPreferencesView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var currentQuestion: PreferenceQuestion = .start
-    @State private var selectedBudget: BudgetRange = .moderate
-    @State private var selectedAccommodation: AccommodationType = .boutique
+    @State private var selectedBudget: BudgetRange = .budget
+    @State private var selectedAccommodation: AccommodationType = .budget
     @State private var selectedActivities: Set<ActivityPreference> = []
     @State private var selectedTransport: TransportPreference = .any
     @State private var selectedDietary: Set<String> = []
     @State private var customDietary = ""
     @State private var showSummary = false
+    @State private var goaStartTime: GoaStartTime = .now
+    @State private var goaBeerPreference: GoaBeerType = .beachShacks
+    @State private var goaOffbeatFocus: Set<GoaOffbeatType> = []
+    @State private var showAgentAnimation = false
 
     let voiceResult: VoiceInputResult
     let onComplete: (TravelPreferences) -> Void
+
+    // Check if this is the Goa demo
+    private var isGoaDemo: Bool {
+        voiceResult.destination.contains("Goa") && voiceResult.destination.contains("Offbeat")
+    }
+
+    private var questionsToShow: [PreferenceQuestion] {
+        if isGoaDemo {
+            return [.start, .goaStartTime, .goaOffbeat, .goaBeer, .goaTransport]
+        } else {
+            return [.start, .budget, .accommodation, .activities, .transport, .dietary]
+        }
+    }
 
     var body: some View {
         ZStack {

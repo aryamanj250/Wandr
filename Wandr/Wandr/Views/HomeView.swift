@@ -324,15 +324,21 @@ struct HomeView: View {
     }
 
     private func parseVoiceInput(_ input: String) -> VoiceInputResult {
-        // Simple parsing logic - in real app this would be more sophisticated
+        // Enhanced parsing for demo scenarios
         let lowercased = input.lowercased()
 
         var destination = "Unknown Destination"
         var duration = 3
         var companions = 2
+        var isGoaDemo = false
 
-        // Extract destination
-        if lowercased.contains("goa") {
+        // Check for Goa demo scenario
+        if lowercased.contains("goa") && lowercased.contains("airport") && lowercased.contains("5k") {
+            destination = "Goa Offbeat Adventure"
+            duration = 1 // Same day trip
+            companions = 2
+            isGoaDemo = true
+        } else if lowercased.contains("goa") {
             destination = "Goa, India"
         } else if lowercased.contains("delhi") {
             destination = "Delhi, India"
@@ -346,21 +352,25 @@ struct HomeView: View {
             destination = "London, UK"
         }
 
-        // Extract duration
-        if lowercased.contains("week") {
-            duration = 7
-        } else if lowercased.contains("weekend") {
-            duration = 2
-        } else if lowercased.contains("4 day") || lowercased.contains("four day") {
-            duration = 4
-        } else if lowercased.contains("5 day") || lowercased.contains("five day") {
-            duration = 5
+        // Extract duration (if not Goa demo)
+        if !isGoaDemo {
+            if lowercased.contains("week") {
+                duration = 7
+            } else if lowercased.contains("weekend") {
+                duration = 2
+            } else if lowercased.contains("4 day") || lowercased.contains("four day") {
+                duration = 4
+            } else if lowercased.contains("5 day") || lowercased.contains("five day") {
+                duration = 5
+            }
         }
 
         // Extract companions
         if lowercased.contains("solo") || lowercased.contains("alone") {
             companions = 1
         } else if lowercased.contains("couple") || lowercased.contains("two") {
+            companions = 2
+        } else if lowercased.contains("me and my friend") {
             companions = 2
         } else if lowercased.contains("4 people") || lowercased.contains("four people") {
             companions = 4
@@ -382,25 +392,27 @@ struct HomeView: View {
         }
 
         // Create new trip from preferences
+        let isGoaTrip = preferences.destination.contains("Goa") && preferences.destination.contains("Offbeat")
+
         let newTrip = UpcomingTrip(
             destination: preferences.destination,
             departureDate: Calendar.current.date(byAdding: .hour, value: 2, to: Date()) ?? Date(),
-            returnDate: Calendar.current.date(byAdding: .day, value: preferences.duration, to: Date()) ?? Date(),
-            duration: "\(preferences.duration) days",
+            returnDate: isGoaTrip ? Calendar.current.date(byAdding: .hour, value: 10, to: Date()) ?? Date() : Calendar.current.date(byAdding: .day, value: preferences.duration, to: Date()) ?? Date(),
+            duration: isGoaTrip ? "Same day trip" : "\(preferences.duration) days",
             status: .planning,
             imageUrl: nil,
-            budget: preferences.budget.displayName,
+            budget: isGoaTrip ? "₹5,000" : preferences.budget.displayName,
             companions: preferences.companions,
             participants: generateParticipantNames(count: preferences.companions),
             progress: TripProgress(
-                totalSteps: 8,
-                completedSteps: 0,
+                totalSteps: isGoaTrip ? 8 : 10,
+                completedSteps: isGoaTrip ? 3 : 0,
                 currentAction: nil,
-                nextAction: "Agents deploying to start planning",
-                estimatedCompletion: "Basic plan ready in 3 minutes"
+                nextAction: isGoaTrip ? "3 agents finding offbeat spots and deals" : "Agents deploying to start planning",
+                estimatedCompletion: isGoaTrip ? "Complete plan ready in 20 minutes" : "Basic plan ready in 3 minutes"
             ),
             bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
-            notes: "AI agents working on \(preferences.activityPreferences.map { $0.rawValue }.joined(separator: ", ")) experiences"
+            notes: isGoaTrip ? "Budget-conscious offbeat adventure with beer experiences" : "AI agents working on \(preferences.activityPreferences.map { $0.rawValue }.joined(separator: ", ")) experiences"
         )
 
         // Add to upcoming trips
