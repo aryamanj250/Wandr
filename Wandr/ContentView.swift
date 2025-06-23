@@ -23,7 +23,7 @@ struct ContentView: View {
             if isOnboarding {
                 OnboardingView(isOnboarding: $isOnboarding)
             } else {
-                MainView()
+                MainTabView()
                     .transition(.opacity)
             }
         }
