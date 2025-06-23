@@ -279,14 +279,52 @@ struct HomeView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 5)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(upcomingTrips) { trip in
-                        TripWithAgentStatus(trip: trip)
-                    }
+            VStack(spacing: 20) {
+                ForEach(upcomingTrips) { trip in
+                    plannedTripWithAgents(trip)
                 }
-                .padding(.horizontal, 5)
             }
+        }
+    }
+
+    // MARK: - Planned Trip with Same UI as Live Trip
+    private func plannedTripWithAgents(_ trip: UpcomingTrip) -> some View {
+        VStack(spacing: 20) {
+            // Section header - different from live trip
+            HStack {
+                Text("Planned Trip")
+                    .font(.custom("Futura", size: 20))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                // Agent status indicator
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(.orange)
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .stroke(.orange.opacity(0.3), lineWidth: 2)
+                                .scaleEffect(1.5)
+                        )
+
+                    Text("AGENTS PLANNING")
+                        .font(.custom("Futura", size: 10))
+                        .fontWeight(.bold)
+                        .foregroundStyle(.orange)
+                        .tracking(1)
+                }
+            }
+
+            // Use the same CurrentTripWithAgents component
+            NavigationLink(destination: GoaTripDetailView(trip: trip)) {
+                CurrentTripWithAgents(trip: trip) {
+                    // Navigation handled by NavigationLink
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
         }
     }
 
@@ -306,8 +344,9 @@ struct HomeView: View {
     }
 
     private func handleVoiceResponse(_ response: String) {
-        // Parse voice input and extract trip details
-        let voiceResult = parseVoiceInput(response)
+        // For demo purposes, always use the Goa scenario
+        let demoPrompt = "me and my friend in goa with around 5k in our pocket and need to get back to the airport at 12 .. plan this trip which should include all the offbeat places.. also include beer"
+        let voiceResult = parseVoiceInput(demoPrompt)
 
         withAnimation(.easeOut(duration: 0.3)) {
             showVoiceInterface = false
@@ -333,7 +372,7 @@ struct HomeView: View {
         var isGoaDemo = false
 
         // Check for Goa demo scenario
-        if lowercased.contains("goa") && lowercased.contains("airport") && lowercased.contains("5k") {
+        if lowercased.contains("goa") && (lowercased.contains("airport") || lowercased.contains("offbeat")) && lowercased.contains("5k") {
             destination = "Goa Offbeat Adventure"
             duration = 1 // Same day trip
             companions = 2

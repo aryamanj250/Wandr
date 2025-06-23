@@ -81,8 +81,14 @@ struct AnimatedPreferencesView: View {
                     .foregroundStyle(.blue)
 
                 HStack(spacing: 16) {
-                    Label("\(voiceResult.duration) days", systemImage: "calendar")
-                    Label("\(voiceResult.companions) people", systemImage: "person.3.fill")
+                    if isGoaDemo {
+                        Label("Same day", systemImage: "clock")
+                        Label("₹5,000 budget", systemImage: "indianrupeesign.circle")
+                        Label("Airport by 12 PM", systemImage: "airplane")
+                    } else {
+                        Label("\(voiceResult.duration) days", systemImage: "calendar")
+                        Label("\(voiceResult.companions) people", systemImage: "person.3.fill")
+                    }
                 }
                 .font(.custom("Futura", size: 12))
                 .foregroundStyle(.white.opacity(0.7))
@@ -90,8 +96,8 @@ struct AnimatedPreferencesView: View {
 
             // Progress bar
             HStack(spacing: 8) {
-                ForEach(0..<PreferenceQuestion.allCases.count, id: \.self) { index in
-                    let isActive = index <= currentQuestion.rawValue
+                ForEach(0..<currentQuestionsCount, id: \.self) { index in
+                    let isActive = index <= currentQuestionIndex
 
                     Circle()
                         .fill(isActive ? .blue : .white.opacity(0.3))
@@ -101,7 +107,7 @@ struct AnimatedPreferencesView: View {
                 }
             }
 
-            Text("Question \(currentQuestion.rawValue + 1) of \(PreferenceQuestion.allCases.count)")
+            Text("Question \(currentQuestionIndex + 1) of \(currentQuestionsCount)")
                 .font(.custom("Futura", size: 12))
                 .foregroundStyle(.white.opacity(0.6))
         }
@@ -116,6 +122,14 @@ struct AnimatedPreferencesView: View {
         )
         .padding(.horizontal, 20)
         .padding(.top, 20)
+    }
+
+    private var currentQuestionsCount: Int {
+        questionsToShow.count
+    }
+
+    private var currentQuestionIndex: Int {
+        questionsToShow.firstIndex(of: currentQuestion) ?? 0
     }
 
     @ViewBuilder
@@ -136,6 +150,14 @@ struct AnimatedPreferencesView: View {
                 transportQuestion
             case .dietary:
                 dietaryQuestion
+            case .goaStartTime:
+                goaStartTimeQuestion
+            case .goaOffbeat:
+                goaOffbeatQuestion
+            case .goaBeer:
+                goaBeerQuestion
+            case .goaTransport:
+                goaTransportQuestion
             }
         }
     }
@@ -395,6 +417,232 @@ struct AnimatedPreferencesView: View {
         }
     }
 
+    // MARK: - Goa-Specific Questions
+
+    private var goaStartTimeQuestion: some View {
+        QuestionContainer(
+            title: "When would you like to start?",
+            subtitle: "It's 2 PM now, and you need to be at the airport by 12 PM tomorrow"
+        ) {
+            VStack(spacing: 16) {
+                ForEach(GoaStartTime.allCases, id: \.self) { time in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            goaStartTime = time
+                        }
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(time.rawValue)
+                                    .font(.custom("Futura", size: 16))
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+
+                                Text("Start: \(time.displayTime)")
+                                    .font(.custom("Futura", size: 14))
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+
+                            Spacer()
+
+                            if goaStartTime == time {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.blue)
+                            } else {
+                                Circle()
+                                    .stroke(.white.opacity(0.3), lineWidth: 2)
+                                    .frame(width: 24, height: 24)
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(goaStartTime == time ? .blue.opacity(0.1) : .white.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(goaStartTime == time ? .blue.opacity(0.3) : .white.opacity(0.1), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var goaOffbeatQuestion: some View {
+        QuestionContainer(
+            title: "What offbeat experiences excite you?",
+            subtitle: "Select all that interest you - I'll find the hidden gems!"
+        ) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 16) {
+                ForEach(GoaOffbeatType.allCases, id: \.self) { offbeat in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            if goaOffbeatFocus.contains(offbeat) {
+                                goaOffbeatFocus.remove(offbeat)
+                            } else {
+                                goaOffbeatFocus.insert(offbeat)
+                            }
+                        }
+                    }) {
+                        VStack(spacing: 12) {
+                            Image(systemName: offbeat.icon)
+                                .font(.system(size: 28))
+                                .foregroundStyle(goaOffbeatFocus.contains(offbeat) ? .orange : .white.opacity(0.7))
+
+                            Text(offbeat.rawValue)
+                                .font(.custom("Futura", size: 13))
+                                .fontWeight(.medium)
+                                .foregroundStyle(.white)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(goaOffbeatFocus.contains(offbeat) ? .orange.opacity(0.1) : .white.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(goaOffbeatFocus.contains(offbeat) ? .orange.opacity(0.3) : .white.opacity(0.1), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var goaBeerQuestion: some View {
+        QuestionContainer(
+            title: "You mentioned beer! What's your vibe?",
+            subtitle: "Let me find the perfect spots for your taste"
+        ) {
+            VStack(spacing: 16) {
+                ForEach(GoaBeerType.allCases, id: \.self) { beer in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            goaBeerPreference = beer
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: beer.icon)
+                                .font(.system(size: 24))
+                                .foregroundStyle(goaBeerPreference == beer ? .green : .white.opacity(0.7))
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(beer.rawValue)
+                                    .font(.custom("Futura", size: 16))
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+
+                                Text(beerDescription(for: beer))
+                                    .font(.custom("Futura", size: 14))
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+
+                            Spacer()
+
+                            if goaBeerPreference == beer {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.green)
+                            } else {
+                                Circle()
+                                    .stroke(.white.opacity(0.3), lineWidth: 2)
+                                    .frame(width: 24, height: 24)
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(goaBeerPreference == beer ? .green.opacity(0.1) : .white.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(goaBeerPreference == beer ? .green.opacity(0.3) : .white.opacity(0.1), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var goaTransportQuestion: some View {
+        QuestionContainer(
+            title: "How do you want to explore Goa?",
+            subtitle: "Choose your ride for the ultimate offbeat adventure"
+        ) {
+            VStack(spacing: 16) {
+                ForEach(GoaTransportType.allCases, id: \.self) { transport in
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            // We'll use the selectedTransport for consistency
+                            selectedTransport = .any // Map to existing enum
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: transport.icon)
+                                .font(.system(size: 24))
+                                .foregroundStyle(.purple)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(transport.rawValue)
+                                    .font(.custom("Futura", size: 16))
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+
+                                Text(transportDescription(for: transport))
+                                    .font(.custom("Futura", size: 14))
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(.purple)
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.purple.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(.purple.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    // Helper functions for descriptions
+    private func beerDescription(for type: GoaBeerType) -> String {
+        switch type {
+        case .beachShacks: return "Authentic local spots with sea views"
+        case .craft: return "Modern breweries with unique flavors"
+        case .feniTasting: return "Traditional Goan cashew wine"
+        case .mixedDrinks: return "Cocktails and mixed beverages"
+        }
+    }
+
+    private func transportDescription(for type: GoaTransportType) -> String {
+        switch type {
+        case .scooter: return "Freedom to explore hidden paths - ₹300/day"
+        case .auto: return "Local experience with friendly drivers"
+        case .taxi: return "Comfortable rides to distant spots"
+        case .localBus: return "Budget-friendly authentic travel"
+        case .mix: return "Best of all worlds for maximum adventure"
+        }
+    }
+
     private var summaryView: some View {
         VStack(spacing: 24) {
             // Header
@@ -550,8 +798,9 @@ struct AnimatedPreferencesView: View {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         if showSummary {
                             showSummary = false
+                            currentQuestion = questionsToShow.last ?? .start
                         } else {
-                            currentQuestion = PreferenceQuestion(rawValue: currentQuestion.rawValue - 1) ?? .start
+                            goToPreviousQuestion()
                         }
                     }
                 }) {
@@ -577,15 +826,15 @@ struct AnimatedPreferencesView: View {
             if !showSummary {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        if currentQuestion == .dietary {
+                        if isLastQuestion {
                             showSummary = true
                         } else {
-                            currentQuestion = PreferenceQuestion(rawValue: currentQuestion.rawValue + 1) ?? .start
+                            goToNextQuestion()
                         }
                     }
                 }) {
                     HStack {
-                        Text(currentQuestion == .dietary ? "Review" : "Next")
+                        Text(isLastQuestion ? "Review" : "Next")
                             .font(.custom("Futura", size: 16))
                             .fontWeight(.medium)
 
@@ -609,6 +858,22 @@ struct AnimatedPreferencesView: View {
         .padding(.bottom, 30)
     }
 
+    private var isLastQuestion: Bool {
+        currentQuestion == questionsToShow.last
+    }
+
+    private func goToNextQuestion() {
+        guard let currentIndex = questionsToShow.firstIndex(of: currentQuestion),
+              currentIndex < questionsToShow.count - 1 else { return }
+        currentQuestion = questionsToShow[currentIndex + 1]
+    }
+
+    private func goToPreviousQuestion() {
+        guard let currentIndex = questionsToShow.firstIndex(of: currentQuestion),
+              currentIndex > 0 else { return }
+        currentQuestion = questionsToShow[currentIndex - 1]
+    }
+
     private var canProceed: Bool {
         switch currentQuestion {
         case .start: return true
@@ -617,6 +882,10 @@ struct AnimatedPreferencesView: View {
         case .activities: return !selectedActivities.isEmpty
         case .transport: return true
         case .dietary: return true
+        case .goaStartTime: return true
+        case .goaOffbeat: return !goaOffbeatFocus.isEmpty
+        case .goaBeer: return true
+        case .goaTransport: return true
         }
     }
 
@@ -682,6 +951,81 @@ enum PreferenceQuestion: Int, CaseIterable {
     case activities = 3
     case transport = 4
     case dietary = 5
+    case goaStartTime = 6
+    case goaOffbeat = 7
+    case goaBeer = 8
+    case goaTransport = 9
+}
+
+// MARK: - Goa-specific enums
+enum GoaStartTime: String, CaseIterable {
+    case now = "Right now (2:00 PM)"
+    case evening = "Evening start (5:00 PM)"
+    case early = "Early tomorrow (6:00 AM)"
+    case custom = "Custom time"
+
+    var displayTime: String {
+        switch self {
+        case .now: return "2:00 PM today"
+        case .evening: return "5:00 PM today"
+        case .early: return "6:00 AM tomorrow"
+        case .custom: return "Custom"
+        }
+    }
+}
+
+enum GoaBeerType: String, CaseIterable {
+    case beachShacks = "Beach shacks with local beer"
+    case craft = "Craft beer spots"
+    case feniTasting = "Local feni tasting"
+    case mixedDrinks = "Mixed drinks & cocktails"
+
+    var icon: String {
+        switch self {
+        case .beachShacks: return "beach.umbrella"
+        case .craft: return "beer.mug"
+        case .feniTasting: return "wineglass"
+        case .mixedDrinks: return "cocktail"
+        }
+    }
+}
+
+enum GoaOffbeatType: String, CaseIterable {
+    case hiddenBeaches = "Hidden beaches"
+    case localVillages = "Local villages"
+    case secretViewpoints = "Secret viewpoints"
+    case undergroundScenes = "Underground music scenes"
+    case artSpots = "Local art spots"
+    case foodStalls = "Street food corners"
+
+    var icon: String {
+        switch self {
+        case .hiddenBeaches: return "water.waves"
+        case .localVillages: return "house.and.flag"
+        case .secretViewpoints: return "mountain.2"
+        case .undergroundScenes: return "music.note"
+        case .artSpots: return "paintbrush"
+        case .foodStalls: return "fork.knife"
+        }
+    }
+}
+
+enum GoaTransportType: String, CaseIterable {
+    case scooter = "Rent a scooter"
+    case auto = "Auto-rickshaw"
+    case taxi = "Taxi/Cab"
+    case localBus = "Local bus"
+    case mix = "Mix of everything"
+
+    var icon: String {
+        switch self {
+        case .scooter: return "scooter"
+        case .auto: return "car.2"
+        case .taxi: return "car"
+        case .localBus: return "bus"
+        case .mix: return "arrow.triangle.swap"
+        }
+    }
 }
 
 #Preview {
