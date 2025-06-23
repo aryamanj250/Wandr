@@ -267,14 +267,13 @@ struct NextTripPreview: View {
             companions: 1,
             participants: ["You", "Sarah"],
             progress: TripProgress(
-                id: UUID(),
                 totalSteps: 8,
                 completedSteps: 6,
                 currentAction: "Enjoying Red Fort visit",
                 nextAction: "Dinner at Karim's",
                 estimatedCompletion: "Tomorrow 6 PM"
             ),
-            bookings: TripBookings(id: UUID(), flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
+            bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
             notes: "Having an amazing time!"
         )) {}
         
@@ -288,8 +287,8 @@ struct NextTripPreview: View {
             budget: "₹25,000 per person",
             companions: 4,
             participants: ["You", "Rahul", "Priya", "Amit"],
-            progress: TripProgress(id: UUID(), totalSteps: 6, completedSteps: 0, currentAction: nil, nextAction: "Start planning", estimatedCompletion: "Plan ready in 3 minutes"),
-            bookings: TripBookings(id: UUID(), flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
+            progress: TripProgress(totalSteps: 6, completedSteps: 0, currentAction: nil, nextAction: "Start planning", estimatedCompletion: "Plan ready in 3 minutes"),
+            bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
             notes: "Beach relaxation with friends"
         )) {}
     }
