@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ExploreView: View {
     @State private var searchText = ""
-    @State private var selectedCategory: ExploreCategory = .destinations
+    @State private var selectedCategory: ExploreCategory = .templates
     
     var body: some View {
         NavigationView {
@@ -29,10 +29,10 @@ struct ExploreView: View {
                     ScrollView {
                         LazyVStack(spacing: 20) {
                             switch selectedCategory {
+                            case .templates:
+                                templatesContent
                             case .destinations:
                                 destinationsContent
-                            case .experiences:
-                                experiencesContent
                             case .inspiration:
                                 inspirationContent
                             }
@@ -43,7 +43,7 @@ struct ExploreView: View {
                     }
                 }
             }
-            .navigationTitle("Explore")
+            .navigationTitle("Trip Templates")
             .navigationBarTitleDisplayMode(.large)
         }
     }
@@ -53,7 +53,7 @@ struct ExploreView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.white.opacity(0.6))
             
-            TextField("Search destinations, experiences...", text: $searchText)
+            TextField("Search trip templates...", text: $searchText)
                 .font(.custom("Futura", size: 16))
                 .foregroundStyle(.white)
                 .tint(.white)
@@ -126,10 +126,10 @@ struct ExploreView: View {
         }
     }
     
-    private var experiencesContent: some View {
+    private var templatesContent: some View {
         VStack(spacing: 20) {
-            ForEach(sampleExperiences) { experience in
-                ExperienceCard(experience: experience)
+            ForEach(sampleTripTemplates) { template in
+                TripTemplateCard(template: template)
             }
         }
     }
@@ -140,6 +140,47 @@ struct ExploreView: View {
                 InspirationCard(inspiration: inspiration)
             }
         }
+    }
+    
+    private var sampleTripTemplates: [TripTemplate] {
+        [
+            TripTemplate(
+                name: "Goa Beach Getaway",
+                duration: "4 days",
+                price: "₹25,000",
+                description: "Perfect beach vacation with water sports and nightlife",
+                highlights: ["Beach activities", "Water sports", "Local cuisine", "Nightlife"],
+                difficulty: .easy,
+                season: "Oct - Mar"
+            ),
+            TripTemplate(
+                name: "Delhi Heritage Tour",
+                duration: "3 days",
+                price: "₹15,000", 
+                description: "Explore Delhi's rich history and culture",
+                highlights: ["Red Fort", "India Gate", "Street food", "Museums"],
+                difficulty: .easy,
+                season: "Oct - Mar"
+            ),
+            TripTemplate(
+                name: "Himalayan Adventure",
+                duration: "7 days",
+                price: "₹45,000",
+                description: "Trekking and mountain adventures in the Himalayas",
+                highlights: ["Mountain trekking", "Scenic views", "Adventure sports", "Local culture"],
+                difficulty: .challenging,
+                season: "Apr - Jun"
+            ),
+            TripTemplate(
+                name: "Kerala Backwaters",
+                duration: "5 days",
+                price: "₹30,000",
+                description: "Relaxing houseboat experience in Kerala's backwaters",
+                highlights: ["Houseboat stay", "Ayurveda spa", "Local cuisine", "Wildlife"],
+                difficulty: .easy,
+                season: "Sep - Mar"
+            )
+        ]
     }
     
     private var sampleDestinations: [ExploreDestination] {
@@ -228,9 +269,9 @@ struct ExploreView: View {
 }
 
 enum ExploreCategory: String, CaseIterable {
+    case templates = "Templates"
     case destinations = "Destinations"
-    case experiences = "Experiences"
-    case inspiration = "Inspiration"
+    case inspiration = "Tips"
     
     var title: String {
         return self.rawValue
@@ -238,14 +279,39 @@ enum ExploreCategory: String, CaseIterable {
     
     var icon: String {
         switch self {
+        case .templates: return "doc.text.fill"
         case .destinations: return "globe.americas.fill"
-        case .experiences: return "star.fill"
         case .inspiration: return "lightbulb.fill"
         }
     }
 }
 
 // Supporting Models
+struct TripTemplate: Identifiable {
+    let id = UUID()
+    let name: String
+    let duration: String
+    let price: String
+    let description: String
+    let highlights: [String]
+    let difficulty: TripDifficulty
+    let season: String
+}
+
+enum TripDifficulty: String, CaseIterable {
+    case easy = "Easy"
+    case moderate = "Moderate" 
+    case challenging = "Challenging"
+    
+    var color: Color {
+        switch self {
+        case .easy: return .green
+        case .moderate: return .orange
+        case .challenging: return .red
+        }
+    }
+}
+
 struct ExploreDestination: Identifiable {
     let id = UUID()
     let name: String
@@ -276,6 +342,103 @@ struct Inspiration: Identifiable {
 }
 
 // Supporting Card Views
+struct TripTemplateCard: View {
+    let template: TripTemplate
+    
+    var body: some View {
+        Button(action: {
+            // Deploy agents for this template
+        }) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(template.name)
+                            .font(.custom("Futura", size: 18))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        
+                        HStack(spacing: 12) {
+                            Label(template.duration, systemImage: "calendar")
+                                .font(.custom("Futura", size: 12))
+                                .foregroundStyle(.white.opacity(0.7))
+                            
+                            Label(template.season, systemImage: "sun.max")
+                                .font(.custom("Futura", size: 12))
+                                .foregroundStyle(.white.opacity(0.7))
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(template.price)
+                            .font(.custom("Futura", size: 16))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.green)
+                        
+                        Text(template.difficulty.rawValue)
+                            .font(.custom("Futura", size: 10))
+                            .foregroundStyle(template.difficulty.color)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule()
+                                    .fill(template.difficulty.color.opacity(0.2))
+                            )
+                    }
+                }
+                
+                // Description
+                Text(template.description)
+                    .font(.custom("Futura", size: 14))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .lineLimit(2)
+                
+                // Highlights
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 6) {
+                    ForEach(template.highlights.prefix(4), id: \.self) { highlight in
+                        Text(highlight)
+                            .font(.custom("Futura", size: 11))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(.blue.opacity(0.2))
+                            )
+                    }
+                }
+                
+                // Deploy button
+                HStack {
+                    Spacer()
+                    
+                    HStack(spacing: 6) {
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 12))
+                        
+                        Text("Deploy Agents")
+                            .font(.custom("Futura", size: 12))
+                            .fontWeight(.medium)
+                    }
+                    .foregroundStyle(.blue)
+                }
+            }
+            .padding(16)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.white.opacity(0.1), lineWidth: 1)
+                )
+        )
+    }
+}
+
 struct DestinationCard: View {
     let destination: ExploreDestination
     

@@ -10,9 +10,8 @@ import Combine
 
 struct HomeView: View {
     @State private var showVoiceInterface = false
-    @State private var showAlfredAction = false
-    @State private var currentAlfredAction: AlfredAction?
-    @State private var butlerGreeting = ""
+    @State private var showPreferencesSelection = false
+    @State private var voiceInputResult: VoiceInputResult?
     @State private var currentTime = Date()
     @State private var voiceButtonScale: CGFloat = 1.0
     @State private var glassOpacity: Double = 1.0
@@ -28,26 +27,24 @@ struct HomeView: View {
             
             // Main content
             ScrollView {
-                VStack(spacing: 20) {
-                    // Butler greeting section
-                    butlerGreetingSection
+                VStack(spacing: 30) {
+                    // App title
+                    appTitleSection
                         .padding(.top, 20)
                     
-                    // Current trip progress (prominent)
-                    currentTripSection
+                    // Current trip with live agent activities
+                    if let currentTrip = sampleCurrentTrip {
+                        currentTripWithAgents(currentTrip)
+                    }
                     
-                    // Glass voice button
+                    // Glass voice button - central focus
                     glassVoiceButton
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 20)
                     
-                    // Quick actions
-                    quickActionsSection
-                    
-                    // Ongoing tasks
-                    ongoingTasksSection
-                    
-                    // Upcoming trips
-                    upcomingTripsSection
+                    // Only show upcoming trips after voice planning creates them
+                    if !sampleTrips.isEmpty {
+                        upcomingTripsSection
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 100)
@@ -58,104 +55,77 @@ struct HomeView: View {
                 voiceInterfaceOverlay
             }
             
-            // Alfred action overlay
-            if showAlfredAction, let action = currentAlfredAction {
-                AlfredActionView(action: action, isShowing: $showAlfredAction)
+            // Preferences selection overlay
+            if showPreferencesSelection, let voiceResult = voiceInputResult {
+                NavigationView {
+                    TravelPreferencesView(
+                        destination: voiceResult.destination,
+                        duration: voiceResult.duration,
+                        companions: voiceResult.companions,
+                        onComplete: { preferences in
+                            handlePreferencesComplete(preferences)
+                        }
+                    )
+                }
+                .transition(.move(edge: .bottom))
             }
         }
         .onAppear {
-            generateButlerGreeting()
+            currentTime = Date()
         }
         .onReceive(timer) { _ in
             currentTime = Date()
-            generateButlerGreeting()
         }
     }
     
-    // MARK: - Butler Greeting Section
-    private var butlerGreetingSection: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(timeBasedGreeting())
-                        .font(.custom("Futura", size: 28))
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                    
-                    Text(butlerGreeting)
-                        .font(.custom("Futura", size: 16))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .lineLimit(2)
-                }
-                
-                Spacer()
-                
-                // Butler avatar
-                ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.1))
-                        .frame(width: 50, height: 50)
-                    
-                    Image(systemName: "person.fill.badge.plus")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white)
-                }
-            }
+    // MARK: - App Title Section
+    private var appTitleSection: some View {
+        VStack(spacing: 8) {
+            Text("Wandr")
+                .font(.custom("Futura", size: 32))
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
             
-            // Current time and weather placeholder
-            HStack {
-                Label(formatCurrentTime(), systemImage: "clock")
-                    .font(.custom("Futura", size: 14))
-                    .foregroundStyle(.white.opacity(0.7))
-                
-                Spacer()
-                
-                Label("22°C Partly Cloudy", systemImage: "cloud.sun")
-                    .font(.custom("Futura", size: 14))
-                    .foregroundStyle(.white.opacity(0.7))
-            }
+            Text("AI Travel Concierge")
+                .font(.custom("Futura", size: 16))
+                .foregroundStyle(.white.opacity(0.7))
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(.white.opacity(0.1), lineWidth: 1)
-                )
-        )
     }
     
-    // MARK: - Current Trip Section
-    private var currentTripSection: some View {
-        VStack(spacing: 16) {
+    // MARK: - Current Trip with Agent Activities
+    private func currentTripWithAgents(_ trip: UpcomingTrip) -> some View {
+        VStack(spacing: 20) {
             // Section header
             HStack {
-                Text("Trip Updates")
+                Text("Live Trip")
                     .font(.custom("Futura", size: 20))
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
+                
                 Spacer()
-                Button(action: {}) {
-                    Text("View All")
-                        .font(.custom("Futura", size: 14))
-                        .foregroundStyle(.white.opacity(0.7))
+                
+                // Live indicator
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(.green)
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .stroke(.green.opacity(0.3), lineWidth: 2)
+                                .scaleEffect(1.5)
+                        )
+                    
+                    Text("AGENTS ACTIVE")
+                        .font(.custom("Futura", size: 10))
+                        .fontWeight(.bold)
+                        .foregroundStyle(.green)
+                        .tracking(1)
                 }
             }
             
-            // Current trip card
-            if let currentTrip = sampleCurrentTrip {
-                CurrentTripCard(trip: currentTrip) {
-                    // Show trip details
-                }
-            }
-            
-            // Next trip preview
-            if let nextTrip = sampleTrips.first {
-                NextTripPreview(trip: nextTrip) {
-                    // Plan trip action
-                    planGoaTrip()
-                }
+            // Enhanced current trip card with agent activities
+            CurrentTripWithAgents(trip: trip) {
+                // Show detailed trip view
             }
         }
     }
@@ -249,7 +219,7 @@ struct HomeView: View {
                                 .font(.system(size: 32))
                                 .foregroundStyle(.white)
                             
-                            Text("Ask Alfred")
+                            Text("Plan Trip")
                                 .font(.custom("Futura", size: 12))
                                 .foregroundStyle(.white.opacity(0.8))
                         }
@@ -278,52 +248,12 @@ struct HomeView: View {
         .buttonStyle(ScaleButtonStyle())
     }
     
-    // MARK: - Quick Actions Section
-    private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Quick Actions")
-                .font(.custom("Futura", size: 20))
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 5)
-            
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: 2), spacing: 15) {
-                ForEach(sampleQuickActions) { action in
-                    QuickActionCard(action: action)
-                }
-            }
-        }
-    }
     
-    // MARK: - Ongoing Tasks Section
-    private var ongoingTasksSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text("Ongoing Tasks")
-                    .font(.custom("Futura", size: 20))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                
-                Spacer()
-                
-                Text("\(sampleTasks.count) active")
-                    .font(.custom("Futura", size: 14))
-                    .foregroundStyle(.white.opacity(0.6))
-            }
-            .padding(.horizontal, 5)
-            
-            LazyVStack(spacing: 12) {
-                ForEach(sampleTasks.prefix(3)) { task in
-                    TaskCard(task: task)
-                }
-            }
-        }
-    }
     
     // MARK: - Upcoming Trips Section
     private var upcomingTripsSection: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("Upcoming Adventures")
+            Text("Planned Trips")
                 .font(.custom("Futura", size: 20))
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
@@ -332,7 +262,7 @@ struct HomeView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
                     ForEach(sampleTrips) { trip in
-                        TripCard(trip: trip)
+                        TripWithAgentStatus(trip: trip)
                     }
                 }
                 .padding(.horizontal, 5)
@@ -341,27 +271,7 @@ struct HomeView: View {
     }
     
     // MARK: - Helper Functions
-    private func timeBasedGreeting() -> String {
-        let timeOfDay = TimeOfDay.current()
-        switch timeOfDay {
-        case .morning: return "Good Morning"
-        case .afternoon: return "Good Afternoon"
-        case .evening: return "Good Evening"
-        case .night: return "Good Evening"
-        }
-    }
     
-    private func generateButlerGreeting() {
-        let greetings = [
-            "Ready to assist with your day",
-            "How may I help you today?",
-            "At your service for another adventure",
-            "What shall we plan today?",
-            "Your personal travel assistant is ready"
-        ]
-        
-        butlerGreeting = greetings.randomElement() ?? greetings[0]
-    }
     
     private func formatCurrentTime() -> String {
         let formatter = DateFormatter()
@@ -376,42 +286,97 @@ struct HomeView: View {
     }
     
     private func handleVoiceResponse(_ response: String) {
-        // Process voice response and show Alfred action
-        if response.lowercased().contains("goa") || response.lowercased().contains("trip") {
-            planGoaTrip()
-        }
+        // Parse voice input and extract trip details
+        let voiceResult = parseVoiceInput(response)
         
         withAnimation(.easeOut(duration: 0.3)) {
             showVoiceInterface = false
             resetVoiceButton()
         }
-    }
-    
-    private func planGoaTrip() {
-        let action = AlfredAction(
-            title: "Planning Your Goa Trip",
-            description: "Setting up a 4-day trip to Goa for 4 people",
-            status: .inProgress,
-            progress: 0.3,
-            estimatedTime: "2-3 minutes",
-            steps: [
-                ActionStep(title: "Searching flights", description: "Finding best flight options from Delhi to Goa", isCompleted: true, isActive: false, duration: "30s"),
-                ActionStep(title: "Comparing hotels", description: "Analyzing 50+ hotels based on your preferences", isCompleted: true, isActive: false, duration: "45s"),
-                ActionStep(title: "Booking recommendations", description: "Preparing personalized recommendations", isCompleted: false, isActive: true, duration: "60s"),
-                ActionStep(title: "Creating itinerary", description: "Building day-by-day activities", isCompleted: false, isActive: false, duration: "45s"),
-                ActionStep(title: "Final review", description: "Preparing options for your approval", isCompleted: false, isActive: false, duration: "30s")
-            ],
-            result: nil
-        )
         
-        currentAlfredAction = action
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-            showAlfredAction = true
+        // Show preferences selection after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            voiceInputResult = voiceResult
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                showPreferencesSelection = true
+            }
         }
     }
+    
+    private func parseVoiceInput(_ input: String) -> VoiceInputResult {
+        // Simple parsing logic - in real app this would be more sophisticated
+        let lowercased = input.lowercased()
+        
+        var destination = "Unknown Destination"
+        var duration = 3
+        var companions = 2
+        
+        // Extract destination
+        if lowercased.contains("goa") {
+            destination = "Goa, India"
+        } else if lowercased.contains("delhi") {
+            destination = "Delhi, India"
+        } else if lowercased.contains("mumbai") {
+            destination = "Mumbai, India"
+        } else if lowercased.contains("tokyo") {
+            destination = "Tokyo, Japan"
+        } else if lowercased.contains("paris") {
+            destination = "Paris, France"
+        } else if lowercased.contains("london") {
+            destination = "London, UK"
+        }
+        
+        // Extract duration
+        if lowercased.contains("week") {
+            duration = 7
+        } else if lowercased.contains("weekend") {
+            duration = 2
+        } else if lowercased.contains("4 day") || lowercased.contains("four day") {
+            duration = 4
+        } else if lowercased.contains("5 day") || lowercased.contains("five day") {
+            duration = 5
+        }
+        
+        // Extract companions
+        if lowercased.contains("solo") || lowercased.contains("alone") {
+            companions = 1
+        } else if lowercased.contains("couple") || lowercased.contains("two") {
+            companions = 2
+        } else if lowercased.contains("4 people") || lowercased.contains("four people") {
+            companions = 4
+        } else if lowercased.contains("friends") {
+            companions = 4
+        }
+        
+        return VoiceInputResult(
+            destination: destination,
+            duration: duration,
+            companions: companions,
+            originalInput: input
+        )
+    }
+    
+    private func handlePreferencesComplete(_ preferences: TravelPreferences) {
+        withAnimation(.easeOut(duration: 0.3)) {
+            showPreferencesSelection = false
+        }
+        
+        // Add trip to the list (this would normally be handled by a data manager)
+        // For now, we'll simulate adding it to the upcoming trips
+        print("Trip preferences completed for \(preferences.destination)")
+    }
+    
 }
 
 // MARK: - Supporting Views and Models
+
+// Voice Input Result
+struct VoiceInputResult {
+    let destination: String
+    let duration: Int
+    let companions: Int
+    let originalInput: String
+}
 
 // Butler Background
 struct ButlerBackground: View {
@@ -447,49 +412,6 @@ struct ButlerBackground: View {
 
 // Sample Data
 extension HomeView {
-    var sampleQuickActions: [QuickAction] {
-        [
-            QuickAction(title: "Weather", subtitle: "Partly Cloudy, 22°C", icon: "cloud.sun", action: .weather, value: "22°C"),
-            QuickAction(title: "Calendar", subtitle: "3 events today", icon: "calendar", action: .calendar, value: "3"),
-            QuickAction(title: "Traffic", subtitle: "Light traffic", icon: "car.fill", action: .traffic, value: "Light"),
-            QuickAction(title: "Reminders", subtitle: "2 pending", icon: "bell.fill", action: .reminders, value: "2")
-        ]
-    }
-    
-    var sampleTasks: [ButlerTask] {
-        [
-            ButlerTask(
-                title: "Get taxi to restaurant",
-                description: "Book ride to La Bernardin for 8:00 PM reservation",
-                priority: .high,
-                dueTime: "7:30 PM",
-                category: .transport,
-                actionable: true,
-                icon: "car.fill",
-                estimatedDuration: "5 min"
-            ),
-            ButlerTask(
-                title: "Check-in reminder",
-                description: "Flight check-in opens in 2 hours",
-                priority: .medium,
-                dueTime: "6:00 PM",
-                category: .travel,
-                actionable: true,
-                icon: "airplane",
-                estimatedDuration: "2 min"
-            ),
-            ButlerTask(
-                title: "Pack essentials",
-                description: "Don't forget charger and travel documents",
-                priority: .medium,
-                dueTime: "Tomorrow",
-                category: .reminder,
-                actionable: false,
-                icon: "suitcase.fill",
-                estimatedDuration: "15 min"
-            )
-        ]
-    }
     
     var sampleCurrentTrip: UpcomingTrip? {
         UpcomingTrip(
@@ -529,54 +451,8 @@ extension HomeView {
     }
     
     var sampleTrips: [UpcomingTrip] {
-        [
-            UpcomingTrip(
-                destination: "Goa, India",
-                departureDate: Calendar.current.date(byAdding: .day, value: 12, to: Date()) ?? Date(),
-                returnDate: Calendar.current.date(byAdding: .day, value: 16, to: Date()) ?? Date(),
-                duration: "4 days",
-                status: .planning,
-                imageUrl: nil,
-                budget: "₹25,000 per person",
-                companions: 4,
-                participants: ["You", "Rahul", "Priya", "Amit"],
-                progress: TripProgress(
-                    totalSteps: 6,
-                    completedSteps: 0,
-                    currentAction: nil,
-                    nextAction: "Start planning",
-                    estimatedCompletion: "Plan ready in 3 minutes"
-                ),
-                bookings: TripBookings(
-                    flights: nil,
-                    hotels: [],
-                    selectedHotel: nil,
-                    transport: [],
-                    activities: []
-                ),
-                notes: "Beach relaxation with friends - looking for beachfront hotels and water sports"
-            ),
-            UpcomingTrip(
-                destination: "Tokyo, Japan",
-                departureDate: Calendar.current.date(byAdding: .day, value: 45, to: Date()) ?? Date(),
-                returnDate: Calendar.current.date(byAdding: .day, value: 52, to: Date()) ?? Date(),
-                duration: "7 days",
-                status: .confirmed,
-                imageUrl: nil,
-                budget: "$2,500",
-                companions: 1,
-                participants: ["You", "Emma"],
-                progress: TripProgress(
-                    totalSteps: 10,
-                    completedSteps: 8,
-                    currentAction: "All bookings confirmed",
-                    nextAction: "Prepare for trip",
-                    estimatedCompletion: "Ready to go!"
-                ),
-                bookings: TripBookings(flights: nil, hotels: [], selectedHotel: nil, transport: [], activities: []),
-                notes: nil
-            )
-        ]
+        // Initially empty - trips will be added after voice planning
+        []
     }
 }
 

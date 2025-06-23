@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // Butler Task model
 struct ButlerTask: Identifiable {
@@ -307,6 +308,171 @@ enum TimeOfDay: String, CaseIterable {
         case 12..<17: return .afternoon
         case 17..<21: return .evening
         default: return .night
+        }
+    }
+}
+
+// MARK: - Agent System Models
+
+// Agent Activity model for live tracking
+struct AgentActivity: Identifiable {
+    let id = UUID()
+    let agentType: AgentType
+    let status: AgentStatus
+    let currentTask: String
+    let lastUpdate: String
+    let progress: Double
+}
+
+// Agent Types
+enum AgentType: String, CaseIterable {
+    case weather = "Weather"
+    case traffic = "Traffic"
+    case restaurant = "Restaurant"
+    case booking = "Booking"
+    case flight = "Flight"
+    case hotel = "Hotel"
+    case activity = "Activity"
+    case transport = "Transport"
+    
+    var icon: String {
+        switch self {
+        case .weather: return "cloud.sun.fill"
+        case .traffic: return "car.fill"
+        case .restaurant: return "fork.knife"
+        case .booking: return "calendar.badge.plus"
+        case .flight: return "airplane"
+        case .hotel: return "building.2.fill"
+        case .activity: return "star.fill"
+        case .transport: return "bus.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .weather: return .blue
+        case .traffic: return .orange
+        case .restaurant: return .green
+        case .booking: return .purple
+        case .flight: return .blue
+        case .hotel: return .cyan
+        case .activity: return .yellow
+        case .transport: return .indigo
+        }
+    }
+    
+    var shortName: String {
+        switch self {
+        case .weather: return "Weather"
+        case .traffic: return "Traffic"
+        case .restaurant: return "Food"
+        case .booking: return "Book"
+        case .flight: return "Flight"
+        case .hotel: return "Hotel"
+        case .activity: return "Fun"
+        case .transport: return "Move"
+        }
+    }
+}
+
+// Agent Status
+enum AgentStatus: String, CaseIterable {
+    case active = "Active"
+    case standby = "Standby"
+    case waiting = "Waiting"
+    case completed = "Completed"
+    case error = "Error"
+    
+    var color: Color {
+        switch self {
+        case .active: return .green
+        case .standby: return .yellow
+        case .waiting: return .orange
+        case .completed: return .blue
+        case .error: return .red
+        }
+    }
+}
+
+// Travel Preferences for voice planning
+struct TravelPreferences: Identifiable {
+    let id = UUID()
+    let destination: String
+    let duration: Int // days
+    let budget: BudgetRange
+    let accommodationType: AccommodationType
+    let activityPreferences: [ActivityPreference]
+    let dietaryRestrictions: [String]
+    let transportPreference: TransportPreference
+    let companions: Int
+}
+
+enum BudgetRange: String, CaseIterable {
+    case budget = "Budget (₹2,000-5,000/day)"
+    case moderate = "Moderate (₹5,000-10,000/day)"
+    case luxury = "Luxury (₹10,000+/day)"
+    
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
+enum AccommodationType: String, CaseIterable {
+    case budget = "Budget Hotel"
+    case boutique = "Boutique Hotel"
+    case luxury = "Luxury Resort"
+    case homestay = "Homestay"
+    case hostel = "Hostel"
+    
+    var icon: String {
+        switch self {
+        case .budget: return "bed.double"
+        case .boutique: return "building.2"
+        case .luxury: return "crown"
+        case .homestay: return "house"
+        case .hostel: return "person.3"
+        }
+    }
+}
+
+enum ActivityPreference: String, CaseIterable {
+    case adventure = "Adventure"
+    case relaxation = "Relaxation"
+    case culture = "Culture"
+    case food = "Food & Dining"
+    case nightlife = "Nightlife"
+    case nature = "Nature"
+    case shopping = "Shopping"
+    case photography = "Photography"
+    
+    var icon: String {
+        switch self {
+        case .adventure: return "figure.hiking"
+        case .relaxation: return "leaf"
+        case .culture: return "building.columns"
+        case .food: return "fork.knife"
+        case .nightlife: return "moon.stars"
+        case .nature: return "tree"
+        case .shopping: return "bag"
+        case .photography: return "camera"
+        }
+    }
+}
+
+enum TransportPreference: String, CaseIterable {
+    case flight = "Flight"
+    case train = "Train"
+    case bus = "Bus"
+    case car = "Private Car"
+    case any = "Any"
+    
+    var icon: String {
+        switch self {
+        case .flight: return "airplane"
+        case .train: return "train.side.front.car"
+        case .bus: return "bus"
+        case .car: return "car"
+        case .any: return "questionmark.circle"
         }
     }
 }

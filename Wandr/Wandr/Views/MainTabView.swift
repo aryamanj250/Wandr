@@ -14,8 +14,8 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem {
-                    Image(systemName: "person.fill.badge.plus")
-                    Text("Alfred")
+                    Image(systemName: "house.fill")
+                    Text("Home")
                 }
                 .tag(0)
             
