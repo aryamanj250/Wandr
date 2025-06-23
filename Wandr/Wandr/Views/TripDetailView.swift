@@ -14,30 +14,30 @@ struct TripDetailView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var isHeaderCollapsed: Bool = false
     @State private var selectedTimelineItem: TimelineItem? = nil
-    
+
     var body: some View {
         ZStack {
             // Background
             ButlerBackground()
                 .edgesIgnoringSafeArea(.all)
-            
+
             VStack(spacing: 0) {
                 // Tab selector (fixed)
                 tabSelector
-                
+
                 // Scrollable content with collapsible header
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(spacing: 0) {
                             // Collapsible header
                             collapsibleTripHeader
-                            
+
                             // Overview section when header is collapsed
                             if isHeaderCollapsed {
                                 overviewSection
                                     .transition(.opacity.combined(with: .move(edge: .top)))
                             }
-                            
+
                             // Content
                             VStack(spacing: 20) {
                                 switch selectedTab {
@@ -79,7 +79,7 @@ struct TripDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Collapsible Header
     private var collapsibleTripHeader: some View {
         VStack(spacing: 16) {
@@ -90,17 +90,17 @@ struct TripDetailView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
                     .animation(.easeInOut(duration: 0.3), value: isHeaderCollapsed)
-                
+
                 if !isHeaderCollapsed {
                     HStack(spacing: 16) {
                         Label("Day 3 of 3", systemImage: "calendar")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
-                        
+
                         Label("\\(trip.companions) people", systemImage: "person.3.fill")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
-                        
+
                         Label(trip.budget ?? "Budget not set", systemImage: "creditcard")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.7))
@@ -108,7 +108,7 @@ struct TripDetailView: View {
                     .transition(.opacity.combined(with: .scale))
                 }
             }
-            
+
             // Progress bar (compact when collapsed)
             VStack(spacing: isHeaderCollapsed ? 4 : 12) {
                 if !isHeaderCollapsed {
@@ -117,23 +117,23 @@ struct TripDetailView: View {
                             .font(.custom("Futura", size: 16))
                             .fontWeight(.semibold)
                             .foregroundStyle(.white)
-                        
+
                         Spacer()
-                        
+
                         Text("\\(Int(trip.progress.progressPercentage * 100))% Complete")
                             .font(.custom("Futura", size: 14))
                             .foregroundStyle(.white.opacity(0.8))
                     }
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
-                
+
                 ProgressView(value: trip.progress.progressPercentage)
                     .tint(.blue)
                     .scaleEffect(y: isHeaderCollapsed ? 1 : 2)
                     .background(.white.opacity(0.1))
                     .animation(.easeInOut(duration: 0.3), value: isHeaderCollapsed)
             }
-            
+
             // Live status (hide when collapsed)
             if !isHeaderCollapsed {
                 HStack(spacing: 8) {
@@ -145,11 +145,11 @@ struct TripDetailView: View {
                                 .stroke(.green.opacity(0.3), lineWidth: 2)
                                 .scaleEffect(1.5)
                         )
-                    
+
                     Text("2 monitoring agents active")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.green)
-                    
+
                     Spacer()
                 }
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
@@ -168,7 +168,7 @@ struct TripDetailView: View {
         .padding(.horizontal, isHeaderCollapsed ? 10 : 20)
         .animation(.easeInOut(duration: 0.3), value: isHeaderCollapsed)
     }
-    
+
     // MARK: - Overview Section
     private var overviewSection: some View {
         VStack(spacing: 16) {
@@ -177,9 +177,9 @@ struct TripDetailView: View {
                     .font(.custom("Futura", size: 18))
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
-                
+
                 Spacer()
-                
+
                 Button("Go to Timeline") {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         selectedTab = .timeline
@@ -188,31 +188,31 @@ struct TripDetailView: View {
                 .font(.custom("Futura", size: 14))
                 .foregroundStyle(.blue)
             }
-            
+
             VStack(spacing: 12) {
                 HStack(spacing: 16) {
                     Label("Day 3 of 3", systemImage: "calendar")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
-                    
+
                     Label("\\(trip.companions) people", systemImage: "person.3.fill")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
-                    
+
                     Spacer()
                 }
-                
+
                 HStack(spacing: 8) {
                     Circle()
                         .fill(.green)
                         .frame(width: 8, height: 8)
-                    
+
                     Text("2 monitoring agents active")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.green)
-                    
+
                     Spacer()
-                    
+
                     Text("\\(Int(trip.progress.progressPercentage * 100))% Complete")
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.8))
@@ -230,12 +230,12 @@ struct TripDetailView: View {
         )
         .padding(.horizontal, 20)
     }
-    
+
     // MARK: - Native Content Views
     private var nativeTimelineContent: some View {
         NativeTimelineView(trip: trip)
     }
-    
+
     private var nativeAgentContent: some View {
         List {
             Section("Currently Active") {
@@ -243,7 +243,7 @@ struct TripDetailView: View {
                     NativeAgentRow(agent: agent)
                 }
             }
-            
+
             Section("Completed Work") {
                 ForEach(completedAgentHistory) { agent in
                     NativeAgentRow(agent: agent)
@@ -253,7 +253,7 @@ struct TripDetailView: View {
         .listStyle(InsetGroupedListStyle())
         .scrollContentBackground(.hidden)
     }
-    
+
     private var nativeBudgetContent: some View {
         List {
             Section("Budget Overview") {
@@ -266,9 +266,9 @@ struct TripDetailView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing) {
                         Text("Spent")
                             .font(.caption)
@@ -281,18 +281,18 @@ struct TripDetailView: View {
                 }
                 .padding(.vertical, 8)
             }
-            
+
             Section("Spending") {
                 ForEach(spendingCategories) { category in
                     HStack {
                         Image(systemName: category.icon)
                             .foregroundStyle(category.color)
                             .frame(width: 20)
-                        
+
                         Text(category.name)
-                        
+
                         Spacer()
-                        
+
                         Text("₹\\(category.amount)")
                             .fontWeight(.medium)
                     }
@@ -302,10 +302,10 @@ struct TripDetailView: View {
         .listStyle(InsetGroupedListStyle())
         .scrollContentBackground(.hidden)
     }
-    
+
     private var tabSelector: some View {
         HStack(spacing: 0) {
-            ForEach(TripDetailTab.allCases, id: \\.self) { tab in
+            ForEach(TripDetailTab.allCases, id: \.self) { tab in
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedTab = tab
@@ -314,7 +314,7 @@ struct TripDetailView: View {
                     VStack(spacing: 4) {
                         Image(systemName: tab.icon)
                             .font(.system(size: 16))
-                        
+
                         Text(tab.title)
                             .font(.custom("Futura", size: 12))
                             .fontWeight(.medium)
@@ -363,14 +363,14 @@ extension TripDetailView {
             ),
             AgentHistory(
                 agentType: .traffic,
-                completedDate: "Ongoing", 
+                completedDate: "Ongoing",
                 tasksCompleted: 8,
                 totalTasks: 10,
                 summary: "Live traffic monitoring and route optimization for remaining activities"
             )
         ]
     }
-    
+
     var completedAgentHistory: [AgentHistory] {
         [
             AgentHistory(
@@ -403,7 +403,7 @@ extension TripDetailView {
             )
         ]
     }
-    
+
     var spendingCategories: [SpendingCategory] {
         [
             SpendingCategory(name: "Accommodation", amount: 4500, icon: "bed.double.fill", color: .blue),
@@ -419,13 +419,13 @@ extension TripDetailView {
 
 enum TripDetailTab: String, CaseIterable {
     case timeline = "Timeline"
-    case agents = "Agents"  
+    case agents = "Agents"
     case budget = "Budget"
-    
+
     var title: String {
         return self.rawValue
     }
-    
+
     var icon: String {
         switch self {
         case .timeline: return "clock.fill"
@@ -449,7 +449,7 @@ enum TimelineStatus {
     case current
     case pending
     case cancelled
-    
+
     var color: Color {
         switch self {
         case .completed: return .green
@@ -458,7 +458,7 @@ enum TimelineStatus {
         case .cancelled: return .red
         }
     }
-    
+
     var icon: String {
         switch self {
         case .completed: return "checkmark.circle.fill"
@@ -484,6 +484,56 @@ struct SpendingCategory: Identifiable {
     let amount: Int
     let icon: String
     let color: Color
+}
+
+// MARK: - Native Agent Row
+struct NativeAgentRow: View {
+    let agent: AgentHistory
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Agent icon
+            ZStack {
+                Circle()
+                    .fill(agent.agentType.color.opacity(0.2))
+                    .frame(width: 32, height: 32)
+
+                Image(systemName: agent.agentType.icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(agent.agentType.color)
+            }
+
+            // Agent details
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(agent.agentType.rawValue) Agent")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(agent.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+
+                Text("Completed \(agent.completedDate)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer()
+
+            // Tasks count
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(agent.tasksCompleted)/\(agent.totalTasks)")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("tasks")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
 }
 
 // MARK: - Scroll Offset Preference Key

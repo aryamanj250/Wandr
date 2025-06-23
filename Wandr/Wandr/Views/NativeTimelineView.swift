@@ -11,7 +11,7 @@ struct NativeTimelineView: View {
     let trip: UpcomingTrip
     @State private var selectedItem: TimelineItem? = nil
     @State private var showingDetail = false
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Current time indicator
@@ -20,9 +20,9 @@ struct NativeTimelineView: View {
                     .font(.custom("Futura", size: 14))
                     .fontWeight(.medium)
                     .foregroundStyle(.white.opacity(0.7))
-                
+
                 Spacer()
-                
+
                 Text("Demo Time")
                     .font(.custom("Futura", size: 12))
                     .foregroundStyle(.blue)
@@ -35,9 +35,9 @@ struct NativeTimelineView: View {
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
-            
-            // Native iOS List
-            List {
+
+            // Timeline items
+            VStack(spacing: 0) {
                 ForEach(todayTimelineItems) { item in
                     NativeTimelineItemRow(
                         item: item,
@@ -50,12 +50,8 @@ struct NativeTimelineView: View {
                             markItemDone(item)
                         }
                     )
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
                 }
             }
-            .listStyle(PlainListStyle())
-            .background(Color.clear)
         }
         .sheet(isPresented: $showingDetail) {
             if let item = selectedItem {
@@ -63,17 +59,17 @@ struct NativeTimelineView: View {
             }
         }
     }
-    
+
     var currentTimelineItem: TimelineItem? {
         // Demo logic: Item at 2:00 PM is current
         return todayTimelineItems.first { $0.time == "2:00" }
     }
-    
+
     private func markItemDone(_ item: TimelineItem) {
         // Handle marking item as done
         print("Marked as done: \(item.title)")
     }
-    
+
     var todayTimelineItems: [TimelineItem] {
         [
             TimelineItem(time: "9:00", title: "Hotel breakfast", description: "Hotel Maidens breakfast buffet", status: .completed, notes: "Excellent parathas!"),
@@ -94,7 +90,7 @@ struct NativeTimelineItemRow: View {
     let isCurrent: Bool
     let onTap: () -> Void
     let onMarkDone: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Connecting line (top)
@@ -104,7 +100,7 @@ struct NativeTimelineItemRow: View {
                     .frame(width: 2, height: 20)
                     .offset(x: -140)
             }
-            
+
             // Main content
             HStack(spacing: 16) {
                 // Time
@@ -113,7 +109,7 @@ struct NativeTimelineItemRow: View {
                         .font(.custom("Futura", size: 14))
                         .fontWeight(.medium)
                         .foregroundStyle(isCurrent ? .blue : .white.opacity(0.8))
-                    
+
                     // Status dot
                     Circle()
                         .fill(item.status.color)
@@ -126,7 +122,7 @@ struct NativeTimelineItemRow: View {
                         .animation(.easeInOut(duration: 0.3), value: isCurrent)
                 }
                 .frame(width: 60)
-                
+
                 // Content
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -134,9 +130,9 @@ struct NativeTimelineItemRow: View {
                             .font(.custom("Futura", size: isCurrent ? 18 : 16))
                             .fontWeight(isCurrent ? .bold : .medium)
                             .foregroundStyle(.white)
-                        
+
                         Spacer()
-                        
+
                         if item.status == .pending || item.status == .current {
                             Button("Mark Done") {
                                 onMarkDone()
@@ -151,40 +147,40 @@ struct NativeTimelineItemRow: View {
                             )
                         }
                     }
-                    
+
                     Text(item.description)
                         .font(.custom("Futura", size: 14))
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(isCurrent ? nil : 2)
-                    
+
                     if let notes = item.notes, isCurrent {
                         Text(notes)
                             .font(.custom("Futura", size: 12))
                             .foregroundStyle(.white.opacity(0.5))
                             .italic()
                     }
-                    
+
                     // Expanded details for current item
                     if isCurrent {
                         VStack(alignment: .leading, spacing: 8) {
                             Divider()
                                 .background(.white.opacity(0.2))
-                            
+
                             HStack {
                                 Button("View Details") {
                                     onTap()
                                 }
                                 .font(.custom("Futura", size: 14))
                                 .foregroundStyle(.blue)
-                                
+
                                 Spacer()
-                                
+
                                 if item.status == .current {
                                     HStack(spacing: 4) {
                                         Circle()
                                             .fill(.green)
                                             .frame(width: 6, height: 6)
-                                        
+
                                         Text("In Progress")
                                             .font(.custom("Futura", size: 12))
                                             .foregroundStyle(.green)
@@ -207,7 +203,7 @@ struct NativeTimelineItemRow: View {
                     )
             )
             .animation(.easeInOut(duration: 0.3), value: isCurrent)
-            
+
             // Connecting line (bottom)
             if item.time != "7:30" {
                 Rectangle()
@@ -225,16 +221,16 @@ struct NativeTimelineItemRow: View {
     }
 }
 
-extension NativeTimelineView {\n    private func statusDisplayName(for status: TimelineStatus) -> String {\n        switch status {\n        case .completed: return \"Completed\"\n        case .current: return \"In Progress\"\n        case .pending: return \"Pending\"\n        case .cancelled: return \"Cancelled\"\n        }\n    }\n}\n\nstruct TimelineItemDetailView: View {
+struct TimelineItemDetailView: View {
     let item: TimelineItem
     @Environment(\.presentationMode) var presentationMode
-    
+
     var body: some View {
         NavigationView {
             ZStack {
-                ButlerBackground()
-                    .edgesIgnoringSafeArea(.all)
-                
+                // Assuming ButlerBackground is available globally
+                // ButlerBackground().edgesIgnoringSafeArea(.all)
+
                 VStack(spacing: 20) {
                     // Header
                     VStack(spacing: 8) {
@@ -242,18 +238,18 @@ extension NativeTimelineView {\n    private func statusDisplayName(for status: T
                             .font(.custom("Futura", size: 24))
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
-                        
+
                         Text("\(item.time) - \(item.description)")
                             .font(.custom("Futura", size: 16))
                             .foregroundStyle(.white.opacity(0.7))
                             .multilineTextAlignment(.center)
                     }
-                    
+
                     // Status
                     HStack {
                         Image(systemName: item.status.icon)
                             .foregroundStyle(item.status.color)
-                        
+
                         Text(statusDisplayName(for: item.status))
                             .font(.custom("Futura", size: 16))
                             .foregroundStyle(item.status.color)
@@ -263,7 +259,7 @@ extension NativeTimelineView {\n    private func statusDisplayName(for status: T
                         RoundedRectangle(cornerRadius: 12)
                             .fill(item.status.color.opacity(0.2))
                     )
-                    
+
                     // Notes
                     if let notes = item.notes {
                         VStack(alignment: .leading, spacing: 8) {
@@ -271,7 +267,7 @@ extension NativeTimelineView {\n    private func statusDisplayName(for status: T
                                 .font(.custom("Futura", size: 18))
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
-                            
+
                             Text(notes)
                                 .font(.custom("Futura", size: 14))
                                 .foregroundStyle(.white.opacity(0.8))
@@ -283,9 +279,9 @@ extension NativeTimelineView {\n    private func statusDisplayName(for status: T
                                 .fill(.white.opacity(0.05))
                         )
                     }
-                    
+
                     Spacer()
-                    
+
                     // Actions
                     if item.status == .pending || item.status == .current {
                         Button("Mark as Complete") {
@@ -317,63 +313,14 @@ extension NativeTimelineView {\n    private func statusDisplayName(for status: T
             }
         }
     }
-}
 
-// MARK: - Native Agent Row
-struct NativeAgentRow: View {
-    let agent: AgentHistory
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // Agent icon
-            ZStack {
-                Circle()
-                    .fill(agent.agentType.color.opacity(0.2))
-                    .frame(width: 32, height: 32)
-                
-                Image(systemName: agent.agentType.icon)
-                    .font(.system(size: 14))
-                    .foregroundStyle(agent.agentType.color)
-            }
-            
-            // Agent details
-            VStack(alignment: .leading, spacing: 4) {
-                Text("\(agent.agentType.rawValue) Agent")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                
-                Text(agent.summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                
-                Text("Completed \(agent.completedDate)")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-            
-            Spacer()
-            
-            // Tasks count
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(agent.tasksCompleted)/\(agent.totalTasks)")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                Text("tasks")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+    private func statusDisplayName(for status: TimelineStatus) -> String {
+        switch status {
+        case .completed: return "Completed"
+        case .current: return "In Progress"
+        case .pending: return "Pending"
+        case .cancelled: return "Cancelled"
         }
-        .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Scroll Offset Preference Key
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
