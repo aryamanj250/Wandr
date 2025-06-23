@@ -97,7 +97,7 @@ struct TripBookings {
 
 // Flight Booking model
 struct FlightBooking: Identifiable {
-    let id = UUID()
+    let id: UUID
     let airline: String
     let flightNumber: String
     let departure: FlightSegment
@@ -105,6 +105,17 @@ struct FlightBooking: Identifiable {
     let price: String
     let status: BookingStatus
     let bookingReference: String?
+    
+    init(airline: String, flightNumber: String, departure: FlightSegment, arrival: FlightSegment, price: String, status: BookingStatus, bookingReference: String? = nil) {
+        self.id = UUID()
+        self.airline = airline
+        self.flightNumber = flightNumber
+        self.departure = departure
+        self.arrival = arrival
+        self.price = price
+        self.status = status
+        self.bookingReference = bookingReference
+    }
 }
 
 struct FlightSegment {
@@ -193,12 +204,21 @@ struct AlfredAction: Identifiable {
 }
 
 struct ActionStep: Identifiable {
-    let id = UUID()
+    let id: UUID
     let title: String
     let description: String
     let isCompleted: Bool
     let isActive: Bool
     let duration: String?
+    
+    init(title: String, description: String, isCompleted: Bool, isActive: Bool, duration: String? = nil) {
+        self.id = UUID()
+        self.title = title
+        self.description = description
+        self.isCompleted = isCompleted
+        self.isActive = isActive
+        self.duration = duration
+    }
 }
 
 struct ActionResult {

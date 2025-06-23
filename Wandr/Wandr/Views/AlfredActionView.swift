@@ -370,8 +370,8 @@ struct ResultRow: View {
             progress: 0.3,
             estimatedTime: "2-3 minutes",
             steps: [
-                ActionStep(id: UUID(), title: "Searching flights", description: "Finding best flight options", isCompleted: true, isActive: false, duration: "30s"),
-                ActionStep(id: UUID(), title: "Comparing hotels", description: "Analyzing 50+ hotels", isCompleted: false, isActive: true, duration: "45s")
+                ActionStep(title: "Searching flights", description: "Finding best flight options", isCompleted: true, isActive: false, duration: "30s"),
+                ActionStep(title: "Comparing hotels", description: "Analyzing 50+ hotels", isCompleted: false, isActive: true, duration: "45s")
             ],
             result: nil
         ),
