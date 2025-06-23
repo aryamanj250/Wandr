@@ -237,70 +237,133 @@ struct TripDetailView: View {
     }
 
     private var nativeAgentContent: some View {
-        List {
-            Section("Currently Active") {
-                ForEach(activeAgentHistory) { agent in
-                    NativeAgentRow(agent: agent)
+        VStack(spacing: 20) {
+            // Currently Active Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Currently Active")
+                    .font(.custom("Futura", size: 18))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+
+                VStack(spacing: 12) {
+                    ForEach(activeAgentHistory) { agent in
+                        NativeAgentRow(agent: agent)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.white.opacity(0.05))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(.green.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                    }
                 }
             }
 
-            Section("Completed Work") {
-                ForEach(completedAgentHistory) { agent in
-                    NativeAgentRow(agent: agent)
+            // Completed Work Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Completed Work")
+                    .font(.custom("Futura", size: 18))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+
+                VStack(spacing: 12) {
+                    ForEach(completedAgentHistory) { agent in
+                        NativeAgentRow(agent: agent)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.white.opacity(0.05))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(.white.opacity(0.1), lineWidth: 1)
+                                    )
+                            )
+                    }
                 }
             }
         }
-        .listStyle(InsetGroupedListStyle())
-        .scrollContentBackground(.hidden)
     }
 
     private var nativeBudgetContent: some View {
-        List {
-            Section("Budget Overview") {
+        VStack(spacing: 20) {
+            // Budget Overview Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Budget Overview")
+                    .font(.custom("Futura", size: 18))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+
                 HStack {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("Total Budget")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.custom("Futura", size: 14))
+                            .foregroundStyle(.white.opacity(0.7))
                         Text("₹15,000")
-                            .font(.title2)
+                            .font(.custom("Futura", size: 24))
                             .fontWeight(.bold)
+                            .foregroundStyle(.white)
                     }
 
                     Spacer()
 
-                    VStack(alignment: .trailing) {
+                    VStack(alignment: .trailing, spacing: 4) {
                         Text("Spent")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.custom("Futura", size: 14))
+                            .foregroundStyle(.white.opacity(0.7))
                         Text("₹13,200")
-                            .font(.title2)
+                            .font(.custom("Futura", size: 24))
                             .fontWeight(.bold)
                             .foregroundStyle(.orange)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.white.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                        )
+                )
             }
 
-            Section("Spending") {
-                ForEach(spendingCategories) { category in
-                    HStack {
-                        Image(systemName: category.icon)
-                            .foregroundStyle(category.color)
-                            .frame(width: 20)
+            // Spending Categories Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Spending Categories")
+                    .font(.custom("Futura", size: 18))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
 
-                        Text(category.name)
+                VStack(spacing: 8) {
+                    ForEach(spendingCategories) { category in
+                        HStack(spacing: 12) {
+                            Image(systemName: category.icon)
+                                .foregroundStyle(category.color)
+                                .font(.system(size: 16))
+                                .frame(width: 24)
 
-                        Spacer()
+                            Text(category.name)
+                                .font(.custom("Futura", size: 16))
+                                .foregroundStyle(.white)
 
-                        Text("₹\\(category.amount)")
-                            .fontWeight(.medium)
+                            Spacer()
+
+                            Text("₹\(category.amount)")
+                                .font(.custom("Futura", size: 16))
+                                .fontWeight(.medium)
+                                .foregroundStyle(.white)
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(.white.opacity(0.03))
+                        )
                     }
                 }
             }
         }
-        .listStyle(InsetGroupedListStyle())
-        .scrollContentBackground(.hidden)
     }
 
     private var tabSelector: some View {
@@ -442,6 +505,42 @@ struct TimelineItem: Identifiable {
     let description: String
     let status: TimelineStatus
     let notes: String?
+    let location: String?
+    let address: String?
+    let duration: String?
+    let cost: String?
+    let howToReach: String?
+    let tips: [String]?
+    let contact: String?
+    let category: TimelineCategory
+}
+
+enum TimelineCategory {
+    case meal
+    case accommodation
+    case sightseeing
+    case transport
+    case activity
+
+    var icon: String {
+        switch self {
+        case .meal: return "fork.knife"
+        case .accommodation: return "bed.double"
+        case .sightseeing: return "eye"
+        case .transport: return "car"
+        case .activity: return "star"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .meal: return .orange
+        case .accommodation: return .purple
+        case .sightseeing: return .blue
+        case .transport: return .green
+        case .activity: return .yellow
+        }
+    }
 }
 
 enum TimelineStatus {
