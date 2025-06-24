@@ -36,7 +36,7 @@ class Config:
     JSONIFY_PRETTYPRINT_REGULAR = True
     
     # Future API Keys (will be uncommented as needed)
-    # GEMINI_API_KEY = config('GEMINI_API_KEY', default=None)
+    GEMINI_API_KEY = config('GEMINI_API_KEY', default=None)
     # TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default=None)
     # TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default=None)
     # RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default=None)

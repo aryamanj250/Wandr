@@ -3,10 +3,13 @@ Main API routes for Wandr Backend.
 Contains health check and basic API endpoints.
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from datetime import datetime
 import sys
 import platform
+import json
+
+from app.services.gemini_service import GeminiService
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__)
@@ -113,6 +116,60 @@ def test_endpoint():
         response_data['form_data'] = dict(request.form) if request.form else None
     
     return jsonify(response_data)
+
+@api_bp.route('/process-text-command', methods=['POST'])
+def process_text_command():
+    """
+    Endpoint to process transcribed text commands using Gemini.
+    Expects a JSON payload with 'text' field.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON', 'message': 'Request must contain a JSON body.'}), 400
+
+        text_input = data.get('text')
+        if not text_input:
+            return jsonify({'error': 'Missing Text', 'message': 'JSON payload must contain a "text" field.'}), 400
+        
+        if not isinstance(text_input, str):
+            return jsonify({'error': 'Invalid Text Format', 'message': 'The "text" field must be a string.'}), 400
+
+        if not text_input.strip():
+            return jsonify({'error': 'Empty Text', 'message': 'The "text" field cannot be empty.'}), 400
+
+        try:
+            gemini_response_text = GeminiService.process_text_command(text_input)
+            # Attempt to parse Gemini's response as JSON
+            gemini_parsed_response = json.loads(gemini_response_text)
+
+            # TODO: Add advanced response validation and cleaning here
+            # For now, we return the parsed JSON directly
+            return jsonify(gemini_parsed_response), 200
+
+        except ValueError as ve:
+            current_app.logger.error(f"Gemini response not valid JSON: {ve}")
+            return jsonify({
+                'error': 'Gemini Processing Error',
+                'message': 'Gemini returned an unparseable response. Please try rephrasing your command.',
+                'details': str(ve)
+            }), 500
+        except Exception as e:
+            current_app.logger.error(f"Error processing text command with Gemini: {e}")
+            return jsonify({
+                'error': 'Internal Server Error',
+                'message': 'An unexpected error occurred while processing your command.',
+                'details': str(e)
+            }), 500
+
+    except Exception as e:
+        current_app.logger.error(f"Error in process_text_command endpoint: {e}")
+        return jsonify({
+            'error': 'Bad Request',
+            'message': 'An error occurred while parsing your request.',
+            'details': str(e)
+        }), 400
+
 
 # Error handler specific to this blueprint
 @api_bp.errorhandler(404)

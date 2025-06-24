@@ -22,4 +22,6 @@ env/
 venv/
 *.env
 .env
+wandr-backend/.env
 test_audio.wav
+create_dummy_audio.py
