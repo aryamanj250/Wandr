@@ -10,116 +10,108 @@ import SwiftUI
 struct CurrentTripCard: View {
     let trip: UpcomingTrip
     let action: () -> Void
+    @State private var isPressed = false
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 16) {
+        AppleCard(
+            padding: AppleDesign.Spacing.cardPadding,
+            cornerRadius: AppleDesign.CornerRadius.card,
+            shadowStyle: AppleDesign.Shadows.medium
+        ) {
+            VStack(spacing: AppleDesign.Spacing.md) {
                 // Header with live indicator
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(.green)
-                                .frame(width: 8, height: 8)
-                                .overlay(
-                                    Circle()
-                                        .stroke(.green.opacity(0.3), lineWidth: 2)
-                                        .scaleEffect(1.5)
-                                )
-
-                            Text("LIVE")
-                                .font(.custom("Futura", size: 10))
-                                .fontWeight(.bold)
-                                .foregroundStyle(.green)
-                                .tracking(1)
-                        }
+                    VStack(alignment: .leading, spacing: AppleDesign.Spacing.xs) {
+                        StatusIndicator(
+                            status: .active,
+                            text: "LIVE",
+                            showPulse: true
+                        )
 
                         Text(trip.destination)
-                            .font(.custom("Futura", size: 22))
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
+                            .font(AppleDesign.Typography.cardTitle)
+                            .foregroundStyle(AppleDesign.Colors.textPrimary)
 
                         Text("Day \(dayNumber) of \(trip.duration)")
-                            .font(.custom("Futura", size: 14))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .font(AppleDesign.Typography.cardSubtitle)
+                            .foregroundStyle(AppleDesign.Colors.textSecondary)
                     }
 
                     Spacer()
 
-                    VStack(alignment: .trailing, spacing: 4) {
+                    VStack(alignment: .trailing, spacing: AppleDesign.Spacing.xs) {
                         Text("Progress")
-                            .font(.custom("Futura", size: 12))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .font(AppleDesign.Typography.caption2)
+                            .foregroundStyle(AppleDesign.Colors.textTertiary)
 
                         Text("\(Int(trip.progress.progressPercentage * 100))%")
-                            .font(.custom("Futura", size: 18))
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
+                            .font(AppleDesign.Typography.title3)
+                            .foregroundStyle(AppleDesign.Colors.textPrimary)
                     }
                 }
 
-                // Progress bar
-                ProgressView(value: trip.progress.progressPercentage)
-                    .tint(.blue)
-                    .scaleEffect(y: 2)
-                    .background(.white.opacity(0.1))
+                // Enhanced progress bar
+                VStack(spacing: AppleDesign.Spacing.xs) {
+                    ProgressView(value: trip.progress.progressPercentage)
+                        .tint(AppleDesign.Colors.info)
+                        .scaleEffect(y: 1.5)
+                        .background(AppleDesign.Colors.surfaceElevated)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .animation(AppleAnimations.gentleSpring, value: trip.progress.progressPercentage)
+                }
 
-                // Current status
-                VStack(spacing: 12) {
+                // Current status with better spacing
+                VStack(spacing: AppleDesign.Spacing.sm) {
                     if let currentAction = trip.progress.currentAction {
-                        HStack {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.blue)
-
-                            Text("Now: \(currentAction)")
-                                .font(.custom("Futura", size: 14))
-                                .foregroundStyle(.white)
-
-                            Spacer()
-                        }
+                        StatusRow(
+                            icon: "location.fill",
+                            iconColor: AppleDesign.Colors.info,
+                            label: "Now",
+                            text: currentAction
+                        )
                     }
 
                     if let nextAction = trip.progress.nextAction {
-                        HStack {
-                            Image(systemName: "clock.fill")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.orange)
-
-                            Text("Next: \(nextAction)")
-                                .font(.custom("Futura", size: 14))
-                                .foregroundStyle(.white.opacity(0.8))
-
-                            Spacer()
-                        }
+                        StatusRow(
+                            icon: "clock.fill",
+                            iconColor: AppleDesign.Colors.warning,
+                            label: "Next",
+                            text: nextAction
+                        )
                     }
                 }
 
-                // Quick actions
-                HStack(spacing: 12) {
-                    QuickActionButton(icon: "phone.fill", title: "Call Hotel", color: .green)
-                    QuickActionButton(icon: "car.fill", title: "Book Ride", color: .blue)
-                    QuickActionButton(icon: "map.fill", title: "Navigate", color: .orange)
+                // Enhanced quick actions
+                HStack(spacing: AppleDesign.Spacing.sm) {
+                    EnhancedQuickActionButton(
+                        icon: "phone.fill",
+                        title: "Call Hotel",
+                        color: AppleDesign.Colors.success
+                    )
+                    
+                    EnhancedQuickActionButton(
+                        icon: "car.fill",
+                        title: "Book Ride",
+                        color: AppleDesign.Colors.info
+                    )
+                    
+                    EnhancedQuickActionButton(
+                        icon: "map.fill",
+                        title: "Navigate",
+                        color: AppleDesign.Colors.warning
+                    )
 
                     Spacer()
 
                     Text("Ends \(formatReturnDate())")
-                        .font(.custom("Futura", size: 12))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(AppleDesign.Typography.caption2)
+                        .foregroundStyle(AppleDesign.Colors.textTertiary)
                 }
             }
-            .padding(20)
         }
-        .buttonStyle(PlainButtonStyle())
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.white.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(.blue.opacity(0.3), lineWidth: 1)
-                )
-                .shadow(color: .blue.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
+        .appleCardPress(action: action)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(AppleAnimations.gentleSpring, value: isPressed)
     }
 
     private var dayNumber: Int {
@@ -660,6 +652,72 @@ struct AgentStatusDot: View {
                 .font(.custom("Futura", size: 8))
                 .foregroundStyle(.white.opacity(0.6))
         }
+    }
+}
+
+// MARK: - Enhanced Components for Apple Design
+struct StatusRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: AppleDesign.Spacing.sm) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(iconColor)
+                .frame(width: 20)
+            
+            Text("\(label):")
+                .font(AppleDesign.Typography.caption1)
+                .foregroundStyle(AppleDesign.Colors.textTertiary)
+            
+            Text(text)
+                .font(AppleDesign.Typography.footnote)
+                .foregroundStyle(AppleDesign.Colors.textSecondary)
+                .lineLimit(2)
+            
+            Spacer()
+        }
+    }
+}
+
+struct EnhancedQuickActionButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    @State private var isPressed = false
+    
+    var body: some View {
+        VStack(spacing: AppleDesign.Spacing.xs) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(isPressed ? 0.3 : 0.2))
+                    .frame(width: 40, height: 40)
+                    .scaleEffect(isPressed ? 0.95 : 1.0)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(color)
+            }
+            
+            Text(title)
+                .font(AppleDesign.Typography.caption2)
+                .foregroundStyle(AppleDesign.Colors.textTertiary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity)
+        .onTapGesture {
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
+        }
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(AppleAnimations.buttonTap) {
+                isPressed = pressing
+            }
+        }, perform: {})
     }
 }
 

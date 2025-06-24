@@ -44,26 +44,50 @@ struct MainTabView: View {
         }
         .tint(.white)
         .onAppear {
-            // Customize tab bar appearance
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.black.withAlphaComponent(0.9)
-            
-            // Normal state
-            appearance.stackedLayoutAppearance.normal.iconColor = UIColor.white.withAlphaComponent(0.6)
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-                .foregroundColor: UIColor.white.withAlphaComponent(0.6),
-                .font: UIFont(name: "Futura-Medium", size: 10) ?? UIFont.systemFont(ofSize: 10)
-            ]
-            
-            // Selected state
-            appearance.stackedLayoutAppearance.selected.iconColor = UIColor.white
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-                .foregroundColor: UIColor.white,
-                .font: UIFont(name: "Futura-Medium", size: 10) ?? UIFont.systemFont(ofSize: 10)
-            ]
-            
-            UITabBar.appearance().standardAppearance = appearance
+            setupTabBarAppearance()
+        }
+        .onChange(of: selectedTab) {
+            // Add haptic feedback for tab switches
+            let impact = UIImpactFeedbackGenerator(style: .soft)
+            impact.impactOccurred()
+        }
+    }
+    
+    private func setupTabBarAppearance() {
+        // Enhanced tab bar appearance with iOS 18 style
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        
+        // Background with glass effect
+        appearance.backgroundColor = UIColor.black.withAlphaComponent(0.95)
+        
+        // Add subtle shadow
+        appearance.shadowColor = UIColor.black.withAlphaComponent(0.3)
+        
+        // Normal state - iOS 18 style
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.white.withAlphaComponent(0.7)
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.white.withAlphaComponent(0.7),
+            .font: UIFont.systemFont(ofSize: 10, weight: .medium)
+        ]
+        
+        // Selected state - iOS 18 enhanced
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.white
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+        ]
+        
+        // Add subtle selection indicator background (iOS 18 feature)
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.white
+        appearance.stackedLayoutAppearance.selected.badgeBackgroundColor = UIColor.white.withAlphaComponent(0.1)
+        
+        // Apply to all tab bar states
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+        
+        // iOS 18 enhancement: Subtle blur effect
+        if #available(iOS 15.0, *) {
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }

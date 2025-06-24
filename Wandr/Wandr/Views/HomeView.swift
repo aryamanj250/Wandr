@@ -14,7 +14,9 @@ struct HomeView: View {
     @State private var voiceInputResult: VoiceInputResult?
     @State private var upcomingTrips: [UpcomingTrip] = []
     @State private var currentTime = Date()
-    @State private var voiceButtonScale: CGFloat = 1.0
+    @State private var contentOpacity: Double = 0
+    @State private var headerOffset: CGFloat = -50
+    @State private var voiceButtonScale: CGFloat = 0.8
     @State private var glassOpacity: Double = 1.0
     @State private var showVoiceAnimation = false
 
@@ -22,45 +24,40 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            // Background
-            ButlerBackground()
-                .edgesIgnoringSafeArea(.all)
+            // Enhanced background
+            ProgressiveBlurBackground(intensity: 1.0)
+                .ignoresSafeArea()
 
             // Main content
-            ScrollView {
-                VStack(spacing: 30) {
-                    // App title
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: AppleDesign.Spacing.sectionSpacing) {
+                    // App title with improved spacing
                     appTitleSection
-                        .padding(.top, 20)
+                        .padding(.top, AppleDesign.Spacing.xl)
+                        .offset(y: headerOffset)
+                        .opacity(contentOpacity)
 
-                    // Voice prompt and button at top
-                    VStack(spacing: 16) {
-                        Text("Ready to plan your next trip?")
-                            .font(.custom("Futura", size: 18))
-                            .fontWeight(.medium)
-                            .foregroundStyle(.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
-
-                        // Glass voice button
-                        glassVoiceButton
-                    }
-                    .padding(.vertical, 20)
+                    // Enhanced voice interaction section
+                    voiceInteractionSection
+                        .appleScaleIn(delay: 0.2, initialScale: 0.9)
 
                     // Current trip with live agent activities
                     if let currentTrip = sampleCurrentTrip {
                         currentTripWithAgents(currentTrip)
+                            .appleSlideIn(from: .bottom, delay: 0.4)
                     }
 
-                    // Only show upcoming trips after voice planning creates them
+                    // Upcoming trips with staggered animation
                     if !upcomingTrips.isEmpty {
                         upcomingTripsSection
+                            .appleSlideIn(from: .bottom, delay: 0.6)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 100)
+                .padding(.horizontal, AppleDesign.Spacing.screenPadding)
+                .padding(.bottom, 120) // Account for custom tab bar
             }
 
-            // Voice interface overlay
+            // Voice interface overlay with enhanced blur
             if showVoiceInterface {
                 voiceInterfaceOverlay
             }
@@ -75,38 +72,158 @@ struct HomeView: View {
                         }
                     )
                 }
-                .transition(.move(edge: .bottom))
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .move(edge: .bottom).combined(with: .opacity)
+                ))
             }
         }
+        .navigationBarHidden(true)
         .onAppear {
             currentTime = Date()
+            startEntranceAnimation()
         }
         .onReceive(timer) { _ in
             currentTime = Date()
         }
     }
+    
+    // MARK: - Animation Helper
+    private func startEntranceAnimation() {
+        withAnimation(AppleAnimations.fadeTransition.delay(0.1)) {
+            contentOpacity = 1.0
+        }
+        
+        withAnimation(AppleAnimations.gentleSpring.delay(0.1)) {
+            headerOffset = 0
+        }
+        
+        withAnimation(AppleAnimations.elasticScale().delay(0.3)) {
+            voiceButtonScale = 1.0
+        }
+    }
 
     // MARK: - App Title Section
     private var appTitleSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: AppleDesign.Spacing.xs) {
             HStack {
                 Text("Wandr")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
+                    .font(AppleDesign.Typography.appTitle)
+                    .foregroundStyle(AppleDesign.Colors.textPrimary)
 
                 Spacer()
             }
 
             HStack {
                 Text("AI Travel Concierge")
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(AppleDesign.Typography.subheadline)
+                    .foregroundStyle(AppleDesign.Colors.textSecondary)
 
                 Spacer()
             }
         }
-        .padding(.horizontal, 4)
+    }
+    
+    // MARK: - Voice Interaction Section
+    private var voiceInteractionSection: some View {
+        VStack(spacing: AppleDesign.Spacing.lg) {
+            Text("Ready to plan your next trip?")
+                .font(AppleDesign.Typography.title3)
+                .foregroundStyle(AppleDesign.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .appleFadeIn(delay: 0.1)
+
+            // Enhanced glass voice button
+            enhancedVoiceButton
+                .scaleEffect(voiceButtonScale)
+        }
+        .padding(.vertical, AppleDesign.Spacing.xl)
+    }
+    
+    // MARK: - Enhanced Voice Button
+    private var enhancedVoiceButton: some View {
+        Button(action: {
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            
+            withAnimation(AppleAnimations.elasticScale(intensity: 1.2)) {
+                showVoiceAnimation = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation(AppleAnimations.modalPresentation) {
+                    showVoiceInterface = true
+                }
+            }
+        }) {
+            ZStack {
+                // Pulsing outer rings
+                ForEach(0..<3) { i in
+                    Circle()
+                        .stroke(AppleDesign.Colors.borderAccent, lineWidth: 1)
+                        .frame(width: 140 + CGFloat(i * 20), height: 140 + CGFloat(i * 20))
+                        .scaleEffect(showVoiceAnimation ? 1.3 : 1.0)
+                        .opacity(showVoiceAnimation ? 0 : 0.6 - Double(i) * 0.2)
+                        .animation(
+                            AppleAnimations.easeOut.delay(Double(i) * 0.1),
+                            value: showVoiceAnimation
+                        )
+                }
+                
+                // Main button with glass effect
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 120, height: 120)
+                    .overlay(
+                        Circle()
+                            .fill(AppleDesign.Colors.surface)
+                    )
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        AppleDesign.Colors.borderAccent,
+                                        AppleDesign.Colors.border
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(color: AppleDesign.Colors.shadowMedium, radius: 20, x: 0, y: 10)
+                    .overlay(
+                        VStack(spacing: AppleDesign.Spacing.sm) {
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 28, weight: .medium))
+                                .foregroundStyle(AppleDesign.Colors.textPrimary)
+
+                            Text("Plan Trip")
+                                .font(AppleDesign.Typography.caption1)
+                                .foregroundStyle(AppleDesign.Colors.textSecondary)
+                        }
+                    )
+                    .scaleEffect(showVoiceAnimation ? 1.05 : 1.0)
+                
+                // Subtle inner glow
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                AppleDesign.Colors.accent.opacity(0.1),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 60
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                    .opacity(showVoiceAnimation ? 0.8 : 0.3)
+            }
+        }
+        .floatingActionButton()
     }
 
     // MARK: - Current Trip with Agent Activities

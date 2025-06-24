@@ -40,7 +40,7 @@ struct VoiceInputView: View {
             mainContentView
         }
         .opacity(isRecording ? 1 : 0)
-        .onChange(of: isRecording) { newValue in
+        .onChange(of: isRecording) { _, newValue in
             if newValue {
                 startRecording()
             } else {
@@ -301,4 +301,4 @@ struct VoiceInputView: View {
 #Preview {
     VoiceInputView(isRecording: .constant(true), onFinish: {})
         .preferredColorScheme(.dark)
-} 
+}

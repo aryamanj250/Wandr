@@ -552,7 +552,7 @@ struct EnhancedTimelineDetailView: View {
                                         .fill(.green)
                                 )
 
-                                if let address = item.address {
+                                if item.address != nil {
                                     Button("Open in Maps") {
                                         // Handle maps opening
                                     }
