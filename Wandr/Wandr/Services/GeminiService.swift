@@ -25,6 +25,7 @@ class GeminiService {
         - Stay within budget constraints provided in the parsed_command.budget.
         - Mix activity types (food, experiences, sightseeing, travel).
         - Consider travel time and logical flow between locations.
+        - If `parsed_command.duration_hours` is provided, ensure the total duration of the itinerary items is within this limit, allowing for a small buffer (e.g., if 12 hours is requested, aim for around 10 hours of activities).
         - Keep descriptions concise (under 50 words per recommendation).
         - Include practical details (timing, booking needs).
         - Return ONLY JSON, no additional text or conversational filler.
@@ -106,7 +107,24 @@ class GeminiService {
 
             do {
                 let decoder = JSONDecoder()
-                let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: data)
+                let geminiResponse = try decoder.decode(GeminiAPIResponse.self, from: data)
+
+                guard let firstCandidate = geminiResponse.candidates.first,
+                      let textContent = firstCandidate.content.parts.first?.text else {
+                    completion(.failure(GeminiError.invalidResponseFormat))
+                    return
+                }
+
+                // Extract the JSON string from the markdown block
+                let jsonString = textContent.replacingOccurrences(of: "```json\n", with: "")
+                                            .replacingOccurrences(of: "\n```", with: "")
+
+                guard let jsonData = jsonString.data(using: .utf8) else {
+                    completion(.failure(GeminiError.invalidResponseFormat))
+                    return
+                }
+
+                let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: jsonData)
                 completion(.success(itineraryResponse))
             } catch {
                 print("Decoding Error: \(error)")

@@ -216,6 +216,7 @@ struct FloatingActionButton: ViewModifier {
     }
 }
 
+
 // MARK: - Loading and Progress Animations
 struct PulsingDot: View {
     let delay: Double

@@ -97,4 +97,4 @@ extension View {
     func scaleIn(delay: Double = 0) -> some View {
         self.modifier(ScaleInModifier(delay: delay))
     }
-} 
+}

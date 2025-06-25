@@ -76,6 +76,55 @@ struct ItineraryItem: Codable, Identifiable {
     }
 }
 
+// MARK: - Gemini API Response Models
+struct GeminiAPIResponse: Codable {
+    let candidates: [Candidate]
+    let usageMetadata: UsageMetadata?
+    let modelVersion: String?
+    let responseId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case candidates
+        case usageMetadata = "usageMetadata"
+        case modelVersion = "modelVersion"
+        case responseId = "responseId"
+    }
+}
+
+struct Candidate: Codable {
+    let content: GeminiContent
+    let finishReason: String?
+    let avgLogprobs: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case content
+        case finishReason
+        case avgLogprobs
+    }
+}
+
+struct GeminiContent: Codable {
+    let parts: [Part]
+    let role: String?
+}
+
+struct Part: Codable {
+    let text: String?
+}
+
+struct UsageMetadata: Codable {
+    let promptTokenCount: Int?
+    let candidatesTokenCount: Int?
+    let totalTokenCount: Int?
+    let promptTokensDetails: [TokenDetails]?
+    let candidatesTokensDetails: [TokenDetails]?
+}
+
+struct TokenDetails: Codable {
+    let modality: String?
+    let tokenCount: Int?
+}
+
 // MARK: - Message model (Existing, kept for compatibility)
 struct Message: Identifiable {
     let id: String
