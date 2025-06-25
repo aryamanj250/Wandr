@@ -18,6 +18,7 @@ struct WandrApp: App {
                 ContentView()
                     .opacity(showLaunchScreen ? 0 : 1)
                     .scaleEffect(appScale)
+                    .environmentObject(SpeechManager())
                 
                 if showLaunchScreen {
                     LaunchScreen {

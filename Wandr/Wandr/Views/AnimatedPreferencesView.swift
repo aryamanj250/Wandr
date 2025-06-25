@@ -42,7 +42,7 @@ struct AnimatedPreferencesView: View {
         ZStack {
             // Background
             ButlerBackground()
-                .edgesIgnoringSafeArea(.all)
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Progress indicator

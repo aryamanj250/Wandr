@@ -8,11 +8,9 @@
 import SwiftUI
 import AVFoundation
 import Combine
-import Foundation // For URLSession and other Foundation types
 // Models are imported automatically as they're in the same module
 
 struct MainView: View {
-    @State private var networkService = NetworkService() // Instantiate NetworkService
     @State private var currentStatus = "Ready to wander"
     @State private var isRecording = false
     @State private var showItinerary = false
@@ -20,8 +18,7 @@ struct MainView: View {
     @State private var micScale: CGFloat = 1.0
     @State private var micOpacity: Double = 1.0
     @State private var processingInput = false
-    @State private var transcribedText: String = "" // Added for VoiceInputView
-
+    
     // Animation properties
     @State private var circleScale: CGFloat = 0.8
     @State private var circleOpacity: Double = 0.2
@@ -95,9 +92,8 @@ struct MainView: View {
             }
             
             // Voice input overlay
-            VoiceInputView(text: $transcribedText) { transcribedText in
-                // Handle voice input completion
-                handleVoiceCompletion(transcribedText: transcribedText)
+            VoiceInputView(isRecording: $isRecording) {
+                handleVoiceCompletion()
             }
             
             // Loading overlay when processing
@@ -200,114 +196,78 @@ struct MainView: View {
     }
     
     // Handle voice input completion
-    private func handleVoiceCompletion(transcribedText: String) {
-        print("Transcribed text: \(transcribedText)")
+    private func handleVoiceCompletion() {
         withAnimation {
             currentStatus = "Creating your perfect adventure..."
             processingInput = true
         }
-
-        networkService.sendTextCommand(text: transcribedText) { result in
-            switch result {
-            case .success(let taskId):
-                DispatchQueue.main.async { [self] in
-                    print("Task initiated with ID: \(taskId)")
-                    self.pollForCommandResult(taskId: taskId)
-                }
-            case .failure(let error):
-                DispatchQueue.main.async { [self] in
-                    print("Error initiating command: \(error.localizedDescription)")
-                    withAnimation {
-                        self.currentStatus = "Error: \(error.localizedDescription)"
-                        self.processingInput = false
-                    }
-                }
+        
+        // Simulate processing delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            generateSampleItinerary()
+            
+            withAnimation {
+                processingInput = false
+                showItinerary = true
+                currentStatus = "Ready to wander"
             }
         }
     }
-
-    private func pollForCommandResult(taskId: String) {
-        let pollInterval: TimeInterval = 1.0 // Poll every 1 second
-        let maxAttempts = 60 // Max 60 attempts (60 seconds)
-        var attempts = 0
-
-        func poll() {
-            guard attempts < maxAttempts else {
-                DispatchQueue.main.async { [self] in
-                    withAnimation {
-                        self.currentStatus = "Error: Processing timed out."
-                        self.processingInput = false
-                    }
-                }
-                return
-            }
-
-            attempts += 1
-            networkService.getCommandResult(taskId: taskId) { result in
-                switch result {
-                case .success(let commandResult):
-                    DispatchQueue.main.async { [self] in
-                        switch commandResult.status {
-                        case "pending", "processing":
-                            // Continue polling
-                            DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) { [self] in
-                                poll()
-                            }
-                        case "completed":
-                            print("Command completed. Result: \(String(describing: commandResult.result))")
-                            if let geminiResult = commandResult.result {
-                                // Assuming GeminiResult can be mapped to Itinerary
-                                // This part needs refinement based on actual Gemini output structure
-                                // Map GeminiResult to Itinerary
-                                let title = geminiResult.location.map { "Trip to \($0)" } ?? "Generated Trip"
-                                let subtitle = geminiResult.preferences?.joined(separator: ", ") ?? "Your personalized adventure awaits!"
-                                let totalCost = geminiResult.budget.map { "Budget: ₹\(Int($0))" } ?? "Budget: N/A"
-                                let notes = geminiResult.special_requirements ?? "No detailed notes provided."
-
-                                self.itinerary = Itinerary(
-                                    title: title,
-                                    subtitle: subtitle,
-                                    totalCost: totalCost,
-                                    items: [], // Gemini currently doesn't provide detailed items
-                                    transportOptions: [], // Gemini currently doesn't provide transport options
-                                    notes: notes
-                                )
-                                withAnimation {
-                                    self.processingInput = false
-                                    self.showItinerary = true
-                                    self.currentStatus = "Ready to wander"
-                                }
-                            } else {
-                                withAnimation {
-                                    self.currentStatus = "Error: No result from Gemini."
-                                    self.processingInput = false
-                                }
-                            }
-                        case "failed":
-                            print("Command failed. Error: \(String(describing: commandResult.error))")
-                            withAnimation {
-                                self.currentStatus = "Error: \(commandResult.error ?? "Unknown error")"
-                                self.processingInput = false
-                            }
-                        default:
-                            print("Unknown task status: \(commandResult.status)")
-                            DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) { [self] in
-                                poll()
-                            }
-                        }
-                    }
-                case .failure(let error):
-                    DispatchQueue.main.async { [self] in
-                        print("Error getting command result: \(error.localizedDescription)")
-                        withAnimation {
-                            self.currentStatus = "Error: \(error.localizedDescription)"
-                            self.processingInput = false
-                        }
-                    }
-                }
-            }
-        }
-        poll() // Start polling
+    
+    // Generate a sample itinerary
+    private func generateSampleItinerary() {
+        let itineraryItems = [
+            ItineraryItem(
+                time: "9:00 AM",
+                title: "Anjuna Beach",
+                description: "Start your day with the sunrise at this beautiful beach. Great for morning walks and swimming.",
+                cost: "Free",
+                image: "sunrise.fill"
+            ),
+            ItineraryItem(
+                time: "12:00 PM",
+                title: "Lunch at Curlies Beach Shack",
+                description: "Enjoy budget-friendly seafood and beer with ocean views. Try their Goan fish curry!",
+                cost: "₹500-600 per person",
+                image: "fork.knife"
+            ),
+            ItineraryItem(
+                time: "2:00 PM",
+                title: "Baga Beach Activities",
+                description: "Relax on the beach or try parasailing (optional extra cost).",
+                cost: "Free (₹1000 for water sports)",
+                image: "beach.umbrella.fill"
+            ),
+            ItineraryItem(
+                time: "5:00 PM",
+                title: "Sunset at Thalassa",
+                description: "Enjoy the famous sunset with a beer in hand at this Greek-themed restaurant.",
+                cost: "₹300-400 per person for drinks",
+                image: "sunset.fill"
+            ),
+            ItineraryItem(
+                time: "8:00 PM",
+                title: "Dinner at Britto's",
+                description: "Popular spot for dinner with live music and great seafood.",
+                cost: "₹700-800 per person",
+                image: "music.note.list"
+            )
+        ]
+        
+        let transportOptions = [
+            TransportOption(type: "Rented Scooters", cost: "₹400 per day per scooter (2 people per scooter)", description: "Most flexible option"),
+            TransportOption(type: "Taxi", cost: "₹1500-2000 total for the day", description: "Split between 4 people"),
+            TransportOption(type: "Local Buses", cost: "₹50-100 per person for the day", description: "Cheapest but less convenient")
+        ]
+        
+        itinerary = Itinerary(
+            title: "Goa Beach Day",
+            subtitle: "A budget-friendly day of beaches and beer",
+            totalCost: "₹3800 per person (approx.)",
+            items: itineraryItems,
+            transportOptions: transportOptions,
+            notes: "Prices are approximate. This itinerary keeps you under your ₹4000 per person budget while hitting the best beach spots in North Goa. The cost includes food, drinks, and transportation via rented scooters."
+        )
     }
 }
 
@@ -339,3 +299,4 @@ struct IndieBackground: View {
 #Preview {
     MainView()
 }
+

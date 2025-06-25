@@ -22,6 +22,7 @@ struct MainViewContent: View {
     @State private var circleOpacity: Double = 0.2
     @State private var inspirationIndex = 0
     @State private var showInspiration = true
+    @State private var transcribedText: String = "" // Added for VoiceInputView
     
     // Inspiration phrases for Goa trip
     private let inspirations = [
@@ -82,8 +83,8 @@ struct MainViewContent: View {
             }
             
             // Voice input overlay
-            VoiceInputView(isRecording: $isRecording) {
-                handleVoiceCompletion()
+            VoiceInputView(text: $transcribedText) { transcribedText in
+                handleVoiceCompletion(transcribedText: transcribedText)
             }
             
             // Loading overlay when processing
@@ -185,7 +186,7 @@ struct MainViewContent: View {
         }
     }
     
-    private func handleVoiceCompletion() {
+    private func handleVoiceCompletion(transcribedText: String) {
         withAnimation {
             currentStatus = "Alfred is planning your perfect Goa trip..."
             processingInput = true

@@ -1,22 +1,24 @@
 import google.generativeai as genai
-from flask import current_app
+# Removed 'from flask import current_app' as it will no longer be directly used in get_model
 
 class GeminiService:
-    _model = None
+    # _model will now be initialized per thread/process if not passed directly
+    # For simplicity, we'll re-configure per call in the background thread.
 
     @classmethod
-    def get_model(cls):
-        if cls._model is None:
-            api_key = current_app.config.get('GEMINI_API_KEY')
-            if not api_key:
-                raise ValueError("GEMINI_API_KEY not configured in Flask app.")
-            genai.configure(api_key=api_key)
-            cls._model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        return cls._model
+    def get_model(cls, api_key: str):
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not provided to GeminiService.")
+        genai.configure(api_key=api_key)
+        # Note: In a multi-threaded/multi-process environment,
+        # genai.configure might need more careful handling if it's not thread-safe.
+        # For this specific fix, re-configuring per call in the background thread is acceptable.
+        return genai.GenerativeModel('gemini-2.0-flash-exp')
 
     @classmethod
-    def process_text_command(cls, text: str):
-        model = cls.get_model()
+    def process_text_command(cls, text: str, api_key: str):
+        # Pass the API key to get_model
+        model = cls.get_model(api_key)
         # TODO: Design sophisticated prompts for Gemini
         # This is a placeholder prompt.
         prompt = f"""
@@ -52,10 +54,12 @@ class GeminiService:
         """
         
         try:
-            response = model.generate_content(prompt)
+            # Add a timeout to the generate_content call
+            response = model.generate_content(prompt, request_options={"timeout": 60}) # 60 seconds timeout
             # Assuming Gemini returns text that can be parsed as JSON
             # Add robust validation and cleaning here later
             return response.text
         except Exception as e:
-            current_app.logger.error(f"Gemini API error: {e}")
+            # Log the error using a standard logger or print, as current_app might not be available
+            print(f"Gemini API error in background thread: {e}", file=sys.stderr)
             raise

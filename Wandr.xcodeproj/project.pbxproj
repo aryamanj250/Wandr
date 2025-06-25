@@ -10,9 +10,22 @@
 		DD5B4AF52E085D40009CCE79 /* Wandr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wandr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DD650BC12E0B609B00EDDFC1 /* Exceptions for "Wandr" folder in "Wandr" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DD5B4AF42E085D40009CCE79 /* Wandr */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DD5B4AF72E085D40009CCE79 /* Wandr */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DD650BC12E0B609B00EDDFC1 /* Exceptions for "Wandr" folder in "Wandr" target */,
+			);
 			path = Wandr;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,10 @@
 				DEVELOPMENT_TEAM = 2U6LMN6748;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Wandr/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "andr needs microphone access to capture your voice for trip planning.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Wandr needs access to speech recognition to turn your voice commands into text.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -287,6 +304,10 @@
 				DEVELOPMENT_TEAM = 2U6LMN6748;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Wandr/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "andr needs microphone access to capture your voice for trip planning.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Wandr needs access to speech recognition to turn your voice commands into text.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
