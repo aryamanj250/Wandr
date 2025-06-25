@@ -5,42 +5,64 @@ class GeminiService {
 
     private init() {}
 
-    func processTextCommand(text: String, apiKey: String, completion: @escaping (Result<String, Error>) -> Void) {
+    func processTextCommand(text: String, apiKey: String, completion: @escaping (Result<ItineraryResponse, Error>) -> Void) {
         guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=\(apiKey)") else {
             completion(.failure(GeminiError.invalidURL))
             return
         }
 
         let prompt = """
-        You are an AI assistant for a travel planning app called Wandr.
-        Your task is to extract structured travel information from user commands.
+        You are a local travel expert for a travel planning app called Wandr.
+        Your task is to create a detailed travel itinerary based on user commands.
         The user command will be a transcribed speech text, which might contain
         speech artifacts like "uhm", "like", or conversational fillers.
-        
-        Extract the following information and return it as a JSON object.
-        If a piece of information is not explicitly mentioned, use `null`.
-        
-        Expected JSON format:
+
+        Create EXACTLY 5-7 recommendations in JSON format.
+
+        User request: "\(text)"
+
+        Rules:
+        - Stay within budget constraints provided in the parsed_command.budget.
+        - Mix activity types (food, experiences, sightseeing, travel).
+        - Consider travel time and logical flow between locations.
+        - Keep descriptions concise (under 50 words per recommendation).
+        - Include practical details (timing, booking needs).
+        - Return ONLY JSON, no additional text or conversational filler.
+        - Ensure the total_estimated_cost is a sum of budget_impact for all itinerary items.
+
+        Response format:
+        ```json
         {
+          "parsed_command": {
             "location": "string | null",
             "budget": "number | null",
             "duration_hours": "number | null",
             "preferences": "array of strings | null",
             "group_size": "number | null",
             "special_requirements": "string | null"
+          },
+          "itinerary": [
+            {
+              "id": "string",
+              "day": "number",
+              "name": "string",
+              "type": "string",
+              "location": "string",
+              "description": "string",
+              "time": "string",
+              "rating": "number | null",
+              "price_range": "string | null",
+              "budget_impact": "number",
+              "why_recommended": "string",
+              "current_status": "string | null",
+              "booking_required": "boolean",
+              "notes": "string | null"
+            }
+          ],
+          "total_estimated_cost": "number",
+          "timeline_suggestion": "string"
         }
-        
-        Examples of data extraction:
-        - "We're in Goa with five thousand rupees each, want some beach vibes and party stuff for eight hours"
-          -> { "location": "Goa", "budget": 5000, "duration_hours": 8, "preferences": ["beach vibes", "party"], "group_size": null, "special_requirements": null }
-        - "I need a trip for two people to Paris for three days, budget around 2000 euros, looking for cultural sites"
-          -> { "location": "Paris", "budget": 2000, "duration_hours": 72, "preferences": ["cultural sites"], "group_size": 2, "special_requirements": null }
-        - "Just a quick weekend getaway, something relaxing"
-          -> { "location": null, "budget": null, "duration_hours": 48, "preferences": ["relaxing"], "group_size": null, "special_requirements": null }
-        
-        User command: "\(text)"
-        
-        Please provide only the JSON output.
+        ```
         """
 
         let parameters: [String: Any] = [
@@ -83,18 +105,14 @@ class GeminiService {
             }
 
             do {
-                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                   let candidates = json["candidates"] as? [[String: Any]],
-                   let firstCandidate = candidates.first,
-                   let content = firstCandidate["content"] as? [String: Any],
-                   let parts = content["parts"] as? [[String: Any]],
-                   let firstPart = parts.first,
-                   let text = firstPart["text"] as? String {
-                    completion(.success(text))
-                } else {
-                    completion(.failure(GeminiError.invalidResponseFormat))
-                }
+                let decoder = JSONDecoder()
+                let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: data)
+                completion(.success(itineraryResponse))
             } catch {
+                print("Decoding Error: \(error)")
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Raw JSON Response: \(jsonString)")
+                }
                 completion(.failure(error))
             }
         }

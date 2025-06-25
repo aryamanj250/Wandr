@@ -1,12 +1,15 @@
 import SwiftUI
 
+import SwiftUI
+
 struct VoiceInputView: View {
     @ObservedObject var speechManager = SpeechManager()
     @Binding var text: String
-    @State private var geminiResponse: String = ""
+    @State private var itineraryResponse: ItineraryResponse? = nil // Changed type to ItineraryResponse
     @State private var isLoading: Bool = false
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
+    @State private var showItineraryView: Bool = false // New state to control presentation
     
     // TODO: Securely load API key, e.g., from environment variables or a secure configuration
     // For demonstration, it's hardcoded. In a real app, use a more secure method.
@@ -26,14 +29,17 @@ struct VoiceInputView: View {
                 ProgressView("Processing...")
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .padding()
-            } else if !geminiResponse.isEmpty {
-                Text("Gemini Response: \(geminiResponse)")
+            } else if let response = itineraryResponse { // Check for ItineraryResponse
+                Text("Itinerary generated for \(response.parsedCommand?.location ?? "your trip")!")
                     .font(.body)
                     .foregroundColor(.white)
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color.green.opacity(0.5))
                     .cornerRadius(10)
+                    .onTapGesture {
+                        showItineraryView = true // Show ItineraryView on tap
+                    }
             } else if showError {
                 Text("Error: \(errorMessage)")
                     .font(.body)
@@ -65,14 +71,14 @@ struct VoiceInputView: View {
                         isLoading = true
                         showError = false
                         errorMessage = ""
+                        itineraryResponse = nil // Clear previous response
                         GeminiService.shared.processTextCommand(text: text, apiKey: geminiAPIKey) { result in
                             DispatchQueue.main.async {
                                 isLoading = false
                                 switch result {
-                                case .success(let responseText):
-                                    self.geminiResponse = responseText
-                                    // You can also pass this response to the parent view if needed
-                                    // onSend(responseText)
+                                case .success(let response): // Changed to 'response' of type ItineraryResponse
+                                    self.itineraryResponse = response
+                                    self.showItineraryView = true // Automatically show ItineraryView on success
                                 case .failure(let error):
                                     self.showError = true
                                     self.errorMessage = error.localizedDescription
@@ -97,8 +103,13 @@ struct VoiceInputView: View {
             self.text = newText
             // Clear previous Gemini response when new speech input starts
             if !newText.isEmpty {
-                geminiResponse = ""
+                itineraryResponse = nil // Clear itinerary response
                 showError = false
+            }
+        }
+        .fullScreenCover(isPresented: $showItineraryView) {
+            if let response = itineraryResponse {
+                ItineraryView(itineraryResponse: response, isShowing: $showItineraryView)
             }
         }
     }

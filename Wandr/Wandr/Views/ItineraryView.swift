@@ -6,14 +6,12 @@
 //
 
 import SwiftUI
-// Models are imported automatically as they're in the same module
 
 struct ItineraryView: View {
-    let itinerary: Itinerary
+    let itineraryResponse: ItineraryResponse
     @Binding var isShowing: Bool
     
     @State private var showDetails = false
-    @State private var selectedTab = 0
     @State private var itemAppearDelay = 0.0
     @State private var headerOpacity = 0.0
     @State private var titleScale = 0.9
@@ -35,11 +33,8 @@ struct ItineraryView: View {
                         titleSection
                             .padding(.top, 25)
                         
-                        // Tab Selection
-                        tabSelectionView
-                        
-                        // Tab Content
-                        tabContentView
+                        // Tab Content (only Timeline now)
+                        timelineView
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 30)
@@ -55,7 +50,7 @@ struct ItineraryView: View {
         }
     }
     
-    // Header view 
+    // Header view
     private var headerView: some View {
         HStack {
             Button(action: {
@@ -123,7 +118,7 @@ struct ItineraryView: View {
     // Title section with clean style
     private var titleSection: some View {
         VStack(spacing: 16) {
-            Text(itinerary.title)
+            Text(itineraryResponse.parsedCommand?.location ?? "Your Journey")
                 .font(.custom("Futura", size: 32))
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
@@ -132,7 +127,7 @@ struct ItineraryView: View {
                 .scaleEffect(titleScale)
                 .animation(.easeOut.delay(0.1), value: showDetails)
             
-            Text(itinerary.subtitle)
+            Text(itineraryResponse.timelineSuggestion)
                 .font(.custom("Futura", size: 16))
                 .italic()
                 .tracking(1)
@@ -143,12 +138,12 @@ struct ItineraryView: View {
                 .animation(.easeOut.delay(0.2), value: showDetails)
             
             HStack {
-                Text("Budget")
+                Text("Estimated Cost")
                     .font(.custom("Futura", size: 16))
                     .tracking(1)
                     .foregroundStyle(.white.opacity(0.8))
                 
-                Text(itinerary.totalCost)
+                Text("$\(itineraryResponse.totalEstimatedCost, specifier: "%.0f")")
                     .font(.custom("Futura", size: 16))
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
@@ -168,148 +163,81 @@ struct ItineraryView: View {
         }
     }
     
-    // Tab selection view
-    private var tabSelectionView: some View {
-        HStack(spacing: 0) {
-            tabButton(title: "Timeline", index: 0)
-            tabButton(title: "Transport", index: 1)
-            tabButton(title: "Notes", index: 2)
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.03))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
-        .opacity(showDetails ? 1 : 0)
-        .animation(.easeOut.delay(0.4), value: showDetails)
-    }
-    
-    // Tab button with clean style
-    private func tabButton(title: String, index: Int) -> some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                selectedTab = index
-                resetItemDelay()
-            }
-        }) {
-            Text(title)
-                .font(.custom("Futura", size: 15))
-                .fontWeight(.medium)
-                .tracking(0.5)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(
-                    selectedTab == index ?
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.white)
-                        .padding(2) : nil
-                )
-                .foregroundStyle(selectedTab == index ? .black : .white.opacity(0.7))
-        }
-        .scaleEffect(selectedTab == index ? 1.0 : 0.98)
-    }
-    
-    // Reset animation delay counter
-    private func resetItemDelay() {
-        itemAppearDelay = 0.0
-    }
-    
-    // Tab content view
-    private var tabContentView: some View {
-        Group {
-            switch selectedTab {
-            case 0:
-                timelineView
-            case 1:
-                transportView
-            case 2:
-                notesView
-            default:
-                timelineView
-            }
-        }
-    }
-    
     // Timeline view
     private var timelineView: some View {
-        TimelineView(items: itinerary.items)
+        TimelineView(items: itineraryResponse.itinerary)
             .padding(.top, 20)
-    }
-    
-    // Transport view
-    private var transportView: some View {
-        VStack(spacing: 16) {
-            ForEach(Array(itinerary.transportOptions.enumerated()), id: \.element.id) { index, option in
-                let delay = 0.5 + Double(index) * 0.1
-                
-                TransportOptionView(option: option)
-                    .opacity(showDetails ? 1 : 0)
-                    .offset(y: showDetails ? 0 : 20)
-                    .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(delay), value: showDetails)
-            }
-        }
-        .padding(.top, 20)
-    }
-    
-    // Notes view
-    private var notesView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Trip Notes")
-                .font(.custom("Futura", size: 20))
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
-                .padding(.top, 10)
-                .opacity(showDetails ? 1 : 0)
-                .animation(.easeOut.delay(0.5), value: showDetails)
-            
-            Text(itinerary.notes)
-                .font(.custom("Futura", size: 16))
-                .foregroundStyle(.white.opacity(0.9))
-                .lineSpacing(6)
-                .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white.opacity(0.05))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        )
-                )
-                .opacity(showDetails ? 1 : 0)
-                .animation(.easeOut.delay(0.6), value: showDetails)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 20)
     }
 }
 
 // Preview
 #Preview {
-    let sampleItems = [
+    let sampleParsedCommand = ParsedCommand(
+        location: "Goa",
+        budget: 5000,
+        durationHours: 8,
+        preferences: ["beach vibes", "party"],
+        groupSize: 2,
+        specialRequirements: nil
+    )
+    
+    let sampleItineraryItems = [
         ItineraryItem(
+            id: UUID().uuidString,
+            day: 1,
+            name: "Anjuna Beach Sunrise",
+            type: "sightseeing",
+            location: "Anjuna Beach, Goa",
+            description: "Start your day with a serene sunrise at Anjuna Beach, perfect for quiet contemplation.",
+            time: "6:00 AM",
+            rating: 4.5,
+            priceRange: "Free",
+            budgetImpact: 0,
+            whyRecommended: "Iconic spot for tranquility and beautiful views.",
+            currentStatus: "Open",
+            bookingRequired: false,
+            notes: nil
+        ),
+        ItineraryItem(
+            id: UUID().uuidString,
+            day: 1,
+            name: "Breakfast at German Bakery",
+            type: "food",
+            location: "Anjuna, Goa",
+            description: "Enjoy a healthy and delicious breakfast at the famous German Bakery.",
             time: "9:00 AM",
-            title: "Beach Morning",
-            description: "Start your day at Anjuna Beach",
-            cost: "Free",
-            image: "sunrise.fill"
+            rating: 4.0,
+            priceRange: "₹300-500 per person",
+            budgetImpact: 400,
+            whyRecommended: "Popular for its fresh bakes and relaxed ambiance.",
+            currentStatus: "Open",
+            bookingRequired: false,
+            notes: "Try their apple crumble."
+        ),
+        ItineraryItem(
+            id: UUID().uuidString,
+            day: 1,
+            name: "Explore Anjuna Flea Market",
+            type: "experience",
+            location: "Anjuna, Goa",
+            description: "Discover unique souvenirs, clothes, and handicrafts at this vibrant market.",
+            time: "11:00 AM",
+            rating: 3.8,
+            priceRange: "Varies",
+            budgetImpact: 800,
+            whyRecommended: "A cultural experience with diverse offerings.",
+            currentStatus: "Open on Wednesdays",
+            bookingRequired: false,
+            notes: "Bargaining is key!"
         )
     ]
     
-    let sampleTransport = [
-        TransportOption(type: "Scooter", cost: "₹400", description: "Most flexible")
-    ]
-    
-    let sampleItinerary = Itinerary(
-        title: "Goa Beach Day",
-        subtitle: "A day of sun and fun",
-        totalCost: "₹3800 per person",
-        items: sampleItems,
-        transportOptions: sampleTransport,
-        notes: "Sample notes about the trip"
+    let sampleItineraryResponse = ItineraryResponse(
+        parsedCommand: sampleParsedCommand,
+        itinerary: sampleItineraryItems,
+        totalEstimatedCost: 1200,
+        timelineSuggestion: "Start at 6 AM, beach morning, breakfast, then market exploration."
     )
     
-    return ItineraryView(itinerary: sampleItinerary, isShowing: .constant(true))
+    return ItineraryView(itineraryResponse: sampleItineraryResponse, isShowing: .constant(true))
 }

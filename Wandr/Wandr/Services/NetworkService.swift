@@ -15,17 +15,8 @@ struct TaskResponse: Codable {
 
 struct CommandResult: Codable {
     let status: String
-    let result: GeminiResult?
+    let result: String? // Changed to String? to hold raw JSON
     let error: String?
-}
-
-struct GeminiResult: Codable {
-    let location: String?
-    let budget: Double? // Use Double for numbers that can be null
-    let duration_hours: Double?
-    let preferences: [String]?
-    let group_size: Int?
-    let special_requirements: String?
 }
 
 class NetworkService {

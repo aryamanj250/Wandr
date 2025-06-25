@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-// Models are imported automatically as they're in the same module
 
 struct TimelineView: View {
     let items: [ItineraryItem]
@@ -20,7 +19,7 @@ struct TimelineView: View {
                 let delay = Double(index) * 0.15
                 
                 TimelineItemView(
-                    item: item, 
+                    item: item,
                     isLast: index == items.count - 1,
                     lineProgress: index == 0 ? lineProgress : (showItems ? 1.0 : 0.0),
                     delay: delay
@@ -95,7 +94,7 @@ struct TimelineItemView: View {
             VStack(alignment: .leading, spacing: 12) {
                 // Title with icon
                 HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: item.image)
+                    Image(systemName: icon(for: item.type))
                         .font(.system(size: 20, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
@@ -104,11 +103,18 @@ struct TimelineItemView: View {
                                 .fill(Color.white.opacity(0.05))
                         )
                     
-                    Text(item.title)
+                    Text(item.name)
                         .font(.custom("Futura", size: 18))
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
                 }
+                
+                // Why Recommended
+                Text(item.whyRecommended)
+                    .font(.custom("Futura", size: 14))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 // Description
                 Text(item.description)
@@ -117,21 +123,86 @@ struct TimelineItemView: View {
                     .lineSpacing(5)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                // Cost badge
-                Text(item.cost)
-                    .font(.custom("Futura", size: 14))
-                    .fontWeight(.medium)
-                    .foregroundStyle(.white.opacity(0.9))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.1))
-                            .overlay(
+                // Price Range / Budget Impact
+                HStack {
+                    if let priceRange = item.priceRange, !priceRange.isEmpty {
+                        Text(priceRange)
+                            .font(.custom("Futura", size: 14))
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white.opacity(0.9))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    .fill(Color.white.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
                             )
-                    )
+                    } else {
+                        Text("$\(item.budgetImpact, specifier: "%.0f")")
+                            .font(.custom("Futura", size: 14))
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white.opacity(0.9))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.white.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    
+                    if let rating = item.rating {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .font(.caption)
+                                .foregroundStyle(.yellow)
+                            Text(String(format: "%.1f", rating))
+                                .font(.custom("Futura", size: 14))
+                                .foregroundStyle(.white.opacity(0.9))
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.white.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                    }
+                }
+                
+                if item.bookingRequired {
+                    Text("Booking Recommended")
+                        .font(.custom("Futura", size: 12))
+                        .fontWeight(.medium)
+                        .foregroundStyle(.orange)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.orange.opacity(0.1))
+                        )
+                }
+                
+                if let currentStatus = item.currentStatus, !currentStatus.isEmpty {
+                    Text("Status: \(currentStatus)")
+                        .font(.custom("Futura", size: 12))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                
+                if let notes = item.notes, !notes.isEmpty {
+                    Text("Notes: \(notes)")
+                        .font(.custom("Futura", size: 12))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
             }
             .padding(.vertical, 20)
             .padding(.horizontal, 18)
@@ -147,75 +218,23 @@ struct TimelineItemView: View {
         }
         .padding(.bottom, isLast ? 10 : 25)
     }
-}
-
-// Transport Option View with clean styling
-struct TransportOptionView: View {
-    let option: TransportOption
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .center, spacing: 12) {
-                // Icon
-                Circle()
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 38, height: 38)
-                    .overlay(
-                        Image(systemName: transportIcon)
-                            .font(.system(size: 20))
-                            .foregroundStyle(.white)
-                    )
-                
-                Text(option.type)
-                    .font(.custom("Futura", size: 18))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-            }
-            
-            Text(option.description)
-                .font(.custom("Futura", size: 14))
-                .foregroundStyle(.white.opacity(0.8))
-                .lineSpacing(4)
-                .padding(.leading, 4)
-            
-            Text(option.cost)
-                .font(.custom("Futura", size: 14))
-                .fontWeight(.medium)
-                .foregroundStyle(.white.opacity(0.9))
-                .padding(.vertical, 8)
-                .padding(.horizontal, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                )
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
-        )
-    }
-    
-    // Get appropriate transport icon
-    private var transportIcon: String {
-        switch option.type.lowercased() {
-        case let type where type.contains("scooter"):
-            return "scooter"
-        case let type where type.contains("taxi") || type.contains("car"):
-            return "car.fill"
-        case let type where type.contains("bus"):
-            return "bus"
-        default:
+    private func icon(for type: String) -> String {
+        switch type.lowercased() {
+        case "food", "restaurant", "cafe":
+            return "fork.knife"
+        case "experience", "activity":
             return "figure.walk"
+        case "sightseeing", "landmark":
+            return "eye.fill"
+        case "travel", "transport":
+            return "car.fill"
+        case "beach":
+            return "beach.umbrella.fill"
+        case "party", "nightlife":
+            return "music.mic"
+        default:
+            return "mappin.and.ellipse"
         }
     }
 }
@@ -227,27 +246,54 @@ struct TransportOptionView: View {
         
         TimelineView(items: [
             ItineraryItem(
+                id: UUID().uuidString,
+                day: 1,
+                name: "Anjuna Beach Sunrise",
+                type: "sightseeing",
+                location: "Anjuna Beach, Goa",
+                description: "Start your day with a serene sunrise at Anjuna Beach, perfect for quiet contemplation.",
+                time: "6:00 AM",
+                rating: 4.5,
+                priceRange: "Free",
+                budgetImpact: 0,
+                whyRecommended: "Iconic spot for tranquility and beautiful views.",
+                currentStatus: "Open",
+                bookingRequired: false,
+                notes: nil
+            ),
+            ItineraryItem(
+                id: UUID().uuidString,
+                day: 1,
+                name: "Breakfast at German Bakery",
+                type: "food",
+                location: "Anjuna, Goa",
+                description: "Enjoy a healthy and delicious breakfast at the famous German Bakery.",
                 time: "9:00 AM",
-                title: "Anjuna Beach",
-                description: "Start your day with the sunrise at this beautiful beach.",
-                cost: "Free",
-                image: "sunrise.fill"
+                rating: 4.0,
+                priceRange: "₹300-500 per person",
+                budgetImpact: 400,
+                whyRecommended: "Popular for its fresh bakes and relaxed ambiance.",
+                currentStatus: "Open",
+                bookingRequired: false,
+                notes: "Try their apple crumble."
             ),
             ItineraryItem(
-                time: "12:00 PM",
-                title: "Lunch at Curlies Beach Shack",
-                description: "Enjoy budget-friendly seafood and beer with ocean views.",
-                cost: "₹600 per person",
-                image: "fork.knife"
-            ),
-            ItineraryItem(
-                time: "5:00 PM",
-                title: "Sunset at Thalassa",
-                description: "Enjoy the famous sunset with a beer in hand at this Greek-themed restaurant.",
-                cost: "₹300-400 per person for drinks",
-                image: "sunset.fill"
+                id: UUID().uuidString,
+                day: 1,
+                name: "Explore Anjuna Flea Market",
+                type: "experience",
+                location: "Anjuna, Goa",
+                description: "Discover unique souvenirs, clothes, and handicrafts at this vibrant market.",
+                time: "11:00 AM",
+                rating: 3.8,
+                priceRange: "Varies",
+                budgetImpact: 800,
+                whyRecommended: "A cultural experience with diverse offerings.",
+                currentStatus: "Open on Wednesdays",
+                bookingRequired: false,
+                notes: "Bargaining is key!"
             )
         ])
         .padding()
     }
-} 
+}

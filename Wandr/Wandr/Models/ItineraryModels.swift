@@ -7,38 +7,79 @@
 
 import Foundation
 
-// Itinerary model
-struct Itinerary {
-    let title: String
-    let subtitle: String
-    let totalCost: String
-    let items: [ItineraryItem]
-    let transportOptions: [TransportOption]
-    let notes: String
+// MARK: - Top-level Itinerary Response Model
+struct ItineraryResponse: Codable {
+    let parsedCommand: ParsedCommand?
+    let itinerary: [ItineraryItem]
+    let totalEstimatedCost: Double
+    let timelineSuggestion: String
+
+    enum CodingKeys: String, CodingKey {
+        case parsedCommand = "parsed_command"
+        case itinerary
+        case totalEstimatedCost = "total_estimated_cost"
+        case timelineSuggestion = "timeline_suggestion"
+    }
 }
 
-// Itinerary Item model
-struct ItineraryItem: Identifiable {
-    let id = UUID()
-    let time: String
-    let title: String
-    let description: String
-    let cost: String
-    let image: String
+// MARK: - Parsed Command Model
+struct ParsedCommand: Codable {
+    let location: String?
+    let budget: Double?
+    let durationHours: Double?
+    let preferences: [String]?
+    let groupSize: Int?
+    let specialRequirements: String?
+
+    enum CodingKeys: String, CodingKey {
+        case location
+        case budget
+        case durationHours = "duration_hours"
+        case preferences
+        case groupSize = "group_size"
+        case specialRequirements = "special_requirements"
+    }
 }
 
-// Transport Option model
-struct TransportOption: Identifiable {
-    let id = UUID()
+// MARK: - Itinerary Item Model
+struct ItineraryItem: Codable, Identifiable {
+    let id: String
+    let day: Int
+    let name: String
     let type: String
-    let cost: String
+    let location: String
     let description: String
+    let time: String
+    let rating: Double?
+    let priceRange: String?
+    let budgetImpact: Double
+    let whyRecommended: String
+    let currentStatus: String?
+    let bookingRequired: Bool
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case day
+        case name
+        case type
+        case location
+        case description
+        case time
+        case rating
+        case priceRange = "price_range"
+        case budgetImpact = "budget_impact"
+        case whyRecommended = "why_recommended"
+        case currentStatus = "current_status"
+        case bookingRequired = "booking_required"
+        case notes
+    }
 }
 
-// Message model
+// MARK: - Message model (Existing, kept for compatibility)
 struct Message: Identifiable {
     let id: String
     let text: String
     let isUser: Bool
     let timestamp: Date
-} 
+}

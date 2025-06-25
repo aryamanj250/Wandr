@@ -16,7 +16,7 @@ struct MainView: View {
     @State private var currentStatus = "Ready to wander"
     @State private var isRecording = false
     @State private var showItinerary = false
-    @State private var itinerary: Itinerary? = nil
+    @State private var itineraryResponse: ItineraryResponse? = nil // Changed type to ItineraryResponse
     @State private var micScale: CGFloat = 1.0
     @State private var micOpacity: Double = 1.0
     @State private var processingInput = false
@@ -50,8 +50,8 @@ struct MainView: View {
                 // Header
                 headerView
                 
-                if showItinerary, let itinerary = itinerary {
-                    ItineraryView(itinerary: itinerary, isShowing: $showItinerary)
+                if showItinerary, let response = itineraryResponse { // Changed to itineraryResponse
+                    ItineraryView(itineraryResponse: response, isShowing: $showItinerary) // Changed to itineraryResponse
                         .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
                 } else {
                     // Main voice input area
@@ -117,7 +117,7 @@ struct MainView: View {
             
             Spacer()
             
-            if showItinerary == false && itinerary != nil {
+            if showItinerary == false && itineraryResponse != nil { // Changed to itineraryResponse
                 Button(action: {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                         showItinerary = true
@@ -252,27 +252,29 @@ struct MainView: View {
                             }
                         case "completed":
                             print("Command completed. Result: \(String(describing: commandResult.result))")
-                            if let geminiResult = commandResult.result {
-                                // Assuming GeminiResult can be mapped to Itinerary
-                                // This part needs refinement based on actual Gemini output structure
-                                // Map GeminiResult to Itinerary
-                                let title = geminiResult.location.map { "Trip to \($0)" } ?? "Generated Trip"
-                                let subtitle = geminiResult.preferences?.joined(separator: ", ") ?? "Your personalized adventure awaits!"
-                                let totalCost = geminiResult.budget.map { "Budget: ₹\(Int($0))" } ?? "Budget: N/A"
-                                let notes = geminiResult.special_requirements ?? "No detailed notes provided."
-
-                                self.itinerary = Itinerary(
-                                    title: title,
-                                    subtitle: subtitle,
-                                    totalCost: totalCost,
-                                    items: [], // Gemini currently doesn't provide detailed items
-                                    transportOptions: [], // Gemini currently doesn't provide transport options
-                                    notes: notes
-                                )
-                                withAnimation {
-                                    self.processingInput = false
-                                    self.showItinerary = true
-                                    self.currentStatus = "Ready to wander"
+                            if let geminiResultString = commandResult.result {
+                                let decoder = JSONDecoder()
+                                if let jsonData = geminiResultString.data(using: .utf8) {
+                                    do {
+                                        let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: jsonData)
+                                        self.itineraryResponse = itineraryResponse
+                                        withAnimation {
+                                            self.processingInput = false
+                                            self.showItinerary = true
+                                            self.currentStatus = "Ready to wander"
+                                        }
+                                    } catch {
+                                        print("Error decoding ItineraryResponse: \(error.localizedDescription)")
+                                        withAnimation {
+                                            self.currentStatus = "Error: Failed to parse itinerary data."
+                                            self.processingInput = false
+                                        }
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.currentStatus = "Error: Invalid data encoding."
+                                        self.processingInput = false
+                                    }
                                 }
                             } else {
                                 withAnimation {
@@ -317,7 +319,7 @@ struct IndieBackground: View {
             // Simple gradient background
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.black, 
+                    Color.black,
                     Color.black.opacity(0.95)
                 ]),
                 startPoint: animateGradient ? .topLeading : .bottomLeading,
