@@ -185,7 +185,7 @@ private struct PulsingRing: View {
             .scaleEffect(showVoiceAnimation ? 1.3 : 1.0)
             .opacity(showVoiceAnimation ? 0 : 0.6 - Double(index) * 0.2)
             .animation(
-                AppleAnimations.easeOut.duration(1.5)
+                AppleAnimations.easeOut
                 ,
                 value: showVoiceAnimation
             )
