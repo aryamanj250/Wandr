@@ -83,9 +83,7 @@ struct MainViewContent: View {
             }
             
             // Voice input overlay
-            VoiceInputView(text: $transcribedText) { transcribedText in
-                handleVoiceCompletion(transcribedText: transcribedText)
-            }
+            VoiceInputView(text: $transcribedText)
             
             // Loading overlay when processing
             if processingInput {
