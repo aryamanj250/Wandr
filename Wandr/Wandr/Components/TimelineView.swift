@@ -140,8 +140,24 @@ struct TimelineItemView: View {
                                             .stroke(Color.white.opacity(0.2), lineWidth: 1)
                                     )
                             )
+                    } else if let budgetImpact = item.budgetImpact {
+                        Text("$\(budgetImpact, specifier: "%.0f")")
+                            .font(.custom("Futura", size: 14))
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white.opacity(0.9))
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.white.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                            )
                     } else {
-                        Text("$\(item.budgetImpact, specifier: "%.0f")")
+                        // Fallback if budgetImpact is nil
+                        Text("Price: N/A")
                             .font(.custom("Futura", size: 14))
                             .fontWeight(.medium)
                             .foregroundStyle(.white.opacity(0.9))
@@ -203,6 +219,18 @@ struct TimelineItemView: View {
                         .font(.custom("Futura", size: 12))
                         .foregroundStyle(.white.opacity(0.7))
                 }
+                
+                if let cuisine = item.cuisine, !cuisine.isEmpty {
+                    Text("Cuisine: \(cuisine)")
+                        .font(.custom("Futura", size: 12))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+
+                if let mealType = item.mealType, !mealType.isEmpty {
+                    Text("Meal Type: \(mealType)")
+                        .font(.custom("Futura", size: 12))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
             }
             .padding(.vertical, 20)
             .padding(.horizontal, 18)
@@ -259,7 +287,9 @@ struct TimelineItemView: View {
                 whyRecommended: "Iconic spot for tranquility and beautiful views.",
                 currentStatus: "Open",
                 bookingRequired: false,
-                notes: nil
+                notes: nil,
+                cuisine: nil,
+                mealType: nil
             ),
             ItineraryItem(
                 id: UUID().uuidString,
@@ -275,7 +305,9 @@ struct TimelineItemView: View {
                 whyRecommended: "Popular for its fresh bakes and relaxed ambiance.",
                 currentStatus: "Open",
                 bookingRequired: false,
-                notes: "Try their apple crumble."
+                notes: "Try their apple crumble.",
+                cuisine: "German",
+                mealType: "Breakfast"
             ),
             ItineraryItem(
                 id: UUID().uuidString,
@@ -291,7 +323,9 @@ struct TimelineItemView: View {
                 whyRecommended: "A cultural experience with diverse offerings.",
                 currentStatus: "Open on Wednesdays",
                 bookingRequired: false,
-                notes: "Bargaining is key!"
+                notes: "Bargaining is key!",
+                cuisine: nil,
+                mealType: nil
             )
         ])
         .padding()

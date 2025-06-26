@@ -1,0 +1,467 @@
+import Foundation
+
+// Error types for Omnidimension API
+enum OmnidimensionError: Error {
+    case invalidURL
+    case noData
+    case apiError(String)
+}
+
+// Swift-based Omnidimension API client to replace Python SDK
+class OmnidimensionService {
+    static let shared = OmnidimensionService()
+    
+    private let apiKey: String
+    private let baseURL = "https://backend.omnidim.io/api/v1"
+    
+    private init() {
+        self.apiKey = Secrets.omnidimensionAPIKey
+        testOmnidimensionConnectivity()
+    }
+    
+    // MARK: - HTTP Client
+    
+    private func makeRequest(
+        method: String,
+        endpoint: String,
+        parameters: [String: Any]? = nil,
+        completion: @escaping (Result<[String: Any], Error>) -> Void
+    ) {
+        guard let url = URL(string: "\(baseURL)/\(endpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/")))") else {
+            completion(.failure(OmnidimensionError.invalidURL))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        if let parameters = parameters, method != "GET" {
+            do {
+                request.httpBody = try JSONSerialization.data(withJSONObject: parameters)
+            } catch {
+                completion(.failure(error))
+                return
+            }
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(OmnidimensionError.noData))
+                return
+            }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    completion(.success(json))
+                } else {
+                    completion(.success([:]))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    func testOmnidimensionConnectivity() {
+        print("Testing Omnidimension connectivity using Swift HTTP client...")
+        
+        // Test a simple API endpoint to verify connectivity
+        makeRequest(method: "GET", endpoint: "agents") { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("✅ Successfully connected to Omnidimension API")
+                    print("Response: \(response)")
+                case .failure(let error):
+                    print("❌ Failed to connect to Omnidimension API: \(error)")
+                    // This is expected if API key is not configured
+                    print("Note: Configure your API key to enable full functionality")
+                }
+            }
+        }
+    }
+
+    // MARK: - Agent Scaffolding
+
+    // MARK: - Agent Management
+    
+    func createAgent(name: String, type: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+        let parameters = [
+            "name": name,
+            "type": type
+        ]
+        
+        makeRequest(method: "POST", endpoint: "agents", parameters: parameters, completion: completion)
+    }
+    
+    func getAgents(completion: @escaping (Result<[String: Any], Error>) -> Void) {
+        makeRequest(method: "GET", endpoint: "agents", completion: completion)
+    }
+    
+    // Placeholder for Reservation Agent
+    func createReservationAgent() {
+        createAgent(name: "Reservation Agent", type: "reservation") { result in
+            switch result {
+            case .success(let response):
+                print("✅ Reservation Agent created: \(response)")
+            case .failure(let error):
+                print("❌ Failed to create Reservation Agent: \(error)")
+            }
+        }
+    }
+
+    // Placeholder for Logistics Coordinator Agent
+    func createLogisticsCoordinatorAgent() {
+        createAgent(name: "Logistics Coordinator", type: "logistics") { result in
+            switch result {
+            case .success(let response):
+                print("✅ Logistics Coordinator Agent created: \(response)")
+            case .failure(let error):
+                print("❌ Failed to create Logistics Coordinator Agent: \(error)")
+            }
+        }
+    }
+
+    // Placeholder for Budget & Payment Agent
+    func createBudgetPaymentAgent() {
+        createAgent(name: "Budget & Payment Agent", type: "payment") { result in
+            switch result {
+            case .success(let response):
+                print("✅ Budget & Payment Agent created: \(response)")
+            case .failure(let error):
+                print("❌ Failed to create Budget & Payment Agent: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Agent Communication & Status Updates
+
+    func sendMessageBetweenAgents(from agent1: String, to agent2: String, message: String) {
+        let parameters = [
+            "from_agent": agent1,
+            "to_agent": agent2,
+            "message": message
+        ]
+        
+        makeRequest(method: "POST", endpoint: "agents/communicate", parameters: parameters) { result in
+            switch result {
+            case .success:
+                print("✅ Message sent from \(agent1) to \(agent2)")
+            case .failure(let error):
+                print("❌ Failed to send message: \(error)")
+            }
+        }
+    }
+
+    func updateUIStatus(agent: String, status: String) {
+        print("📊 UI STATUS UPDATE: [\(agent)] \(status)")
+        NotificationCenter.default.post(
+            name: .agentStatusUpdate,
+            object: nil,
+            userInfo: ["agent": agent, "status": status]
+        )
+    }
+
+    // MARK: - Integration Points for External Functionality
+
+    func makePhoneCall(to number: String, message: String) {
+        let parameters = [
+            "phone_number": number,
+            "message": message
+        ]
+        
+        makeRequest(method: "POST", endpoint: "calls", parameters: parameters) { result in
+            switch result {
+            case .success:
+                print("✅ Phone call initiated to \(number)")
+            case .failure(let error):
+                print("❌ Failed to initiate call: \(error)")
+            }
+        }
+    }
+
+    func sendSMS(to number: String, message: String) {
+        print("\n🍽️ RESTAURANT BOOKING AGENT - REAL SMS SENDING")
+        print("📱 To: \(number)")
+        print("💬 Message: \(message)")
+        print("⏰ Timestamp: \(Date())")
+        print("─────────────────────────────────────────")
+        
+        // Try Twilio first (most reliable)
+        sendViaTwilio(to: number, message: message) { [weak self] success in
+            if !success {
+                print("🔄 Twilio failed, trying MSG91...")
+                self?.sendViaMSG91(to: number, message: message) { success in
+                    if success {
+                        print("✅ SMS sent successfully via MSG91!")
+                    } else {
+                        print("❌ Both SMS services failed. Check your API configurations.")
+                    }
+                }
+            } else {
+                print("✅ SMS sent successfully via Twilio!")
+            }
+        }
+    }
+    
+    // MARK: - Real SMS Service Implementations
+    
+    private func sendViaTwilio(to number: String, message: String, completion: @escaping (Bool) -> Void) {
+        let accountSID = Secrets.twilioAccountSID
+        let authToken = Secrets.twilioAuthToken
+        let fromNumber = Secrets.twilioFromNumber
+        
+        guard !accountSID.isEmpty else { // Check if the secret is actually configured
+            print("⚠️ Twilio credentials not configured")
+            completion(false)
+            return
+        }
+        
+        let url = "https://api.twilio.com/2010-04-01/Accounts/\(accountSID)/Messages.json"
+        
+        guard let apiURL = URL(string: url) else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: apiURL)
+        request.httpMethod = "POST"
+        
+        // Basic auth
+        let credentials = "\(accountSID):\(authToken)"
+        let credentialsData = credentials.data(using: .utf8)!
+        let base64Credentials = credentialsData.base64EncodedString()
+        request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        let bodyString = "From=\(fromNumber)&To=\(number)&Body=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        request.httpBody = bodyString.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("🔥 Twilio error: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    if httpResponse.statusCode == 201 {
+                        print("📤 Twilio SMS sent successfully")
+                        completion(true)
+                    } else {
+                        print("🔥 Twilio HTTP error: \(httpResponse.statusCode)")
+                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                            print("🔥 Response: \(responseString)")
+                        }
+                        completion(false)
+                    }
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
+    
+    
+    private func sendViaMSG91(to number: String, message: String, completion: @escaping (Bool) -> Void) {
+        let authKey = Secrets.msg91AuthKey
+        
+        guard !authKey.isEmpty else {
+            print("⚠️ MSG91 credentials not configured")
+            completion(false)
+            return
+        }
+        
+        let url = "https://api.msg91.com/api/sendhttp.php"
+        
+        guard let apiURL = URL(string: url) else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: apiURL)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        let bodyString = "authkey=\(authKey)&mobiles=\(number)&message=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&sender=WANDR&route=4"
+        request.httpBody = bodyString.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("🔥 MSG91 error: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    // MSG91 returns various response formats, check for success indicators
+                    if responseString.contains("success") || responseString.contains("Message sent successfully") {
+                        print("📤 MSG91 SMS sent successfully")
+                        completion(true)
+                    } else {
+                        print("🔥 MSG91 API error: \(responseString)")
+                        completion(false)
+                    }
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
+
+    func processPayment(amount: Double, recipient: String) {
+        let parameters = [
+            "amount": amount,
+            "recipient": recipient
+        ] as [String : Any]
+        
+        makeRequest(method: "POST", endpoint: "payments", parameters: parameters) { result in
+            switch result {
+            case .success:
+                print("✅ Payment processed: \(amount) to \(recipient)")
+            case .failure(let error):
+                print("❌ Failed to process payment: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Itinerary Processing for Agents
+
+    func sendItineraryToReservationAgent(itineraryResponse: ItineraryResponse) {
+        print("\n🚀 OMNIDIMENSION AGENT SYSTEM ACTIVATED")
+        print("📨 Sending itinerary to Restaurant Booking Agent...")
+        print("🏨 Location: \(itineraryResponse.parsedCommand?.location ?? "Unknown location")")
+        print("💰 Budget: $\(itineraryResponse.totalEstimatedCost)")
+        print("📝 Items in itinerary: \(itineraryResponse.itinerary.count)")
+        
+        updateUIStatus(agent: "Reservation Agent", status: "Receiving Itinerary...")
+        
+        // Work directly with the ItineraryResponse object instead of encoding/decoding
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.processItineraryForRestaurants(itineraryResponse: itineraryResponse)
+        }
+    }
+
+    private func processItineraryForRestaurants(itineraryResponse: ItineraryResponse) {
+        updateUIStatus(agent: "Reservation Agent", status: "Processing Itinerary...")
+        print("\n🤖 RESTAURANT BOOKING AGENT ACTIVATED")
+        print("📋 Processing itinerary for restaurant bookings...")
+        
+        let restaurantCount = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }.count
+        print("🔍 Found \(restaurantCount) restaurant/food items in itinerary")
+        
+        var processedReservations = 0
+        
+        for (index, item) in itineraryResponse.itinerary.enumerated() {
+            print("📝 Processing item \(index + 1): \(item.name) (Type: \(item.type))")
+            
+            if item.type.lowercased() == "food" {
+                processedReservations += 1
+                let restaurantName = item.name
+                let reservationTime = item.time
+                let location = item.location
+                let cuisine = item.cuisine ?? "unspecified cuisine"
+                let mealType = item.mealType ?? "meal"
+                let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
+                
+                    print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
+                    updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+                    
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message)
+                    
+                    // Use async delay instead of blocking thread
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    }
+                }
+            }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(processedReservations) reservations attempted")
+            print("🎉 Restaurant booking agent completed: \(processedReservations) reservations processed")
+        }
+    }
+
+    private func handleItineraryMessage(itineraryData: [String: Any]) {
+        updateUIStatus(agent: "Reservation Agent", status: "Processing Itinerary...")
+        print("\n🤖 RESTAURANT BOOKING AGENT ACTIVATED")
+        print("📋 Processing itinerary for restaurant bookings...")
+        
+        do {
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let data = try JSONSerialization.data(withJSONObject: itineraryData, options: [])
+            let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: data)
+
+            let restaurantCount = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }.count
+            print("🔍 Found \(restaurantCount) restaurant/food items in itinerary")
+            
+            var processedReservations = 0
+            
+            for (index, item) in itineraryResponse.itinerary.enumerated() {
+                print("📝 Processing item \(index + 1): \(item.name) (Type: \(item.type))")
+                
+                if item.type.lowercased() == "food" {
+                    processedReservations += 1
+                    let restaurantName = item.name
+                    let reservationTime = item.time
+                    let location = item.location
+                    let cuisine = item.cuisine ?? "unspecified cuisine"
+                    let mealType = item.mealType ?? "meal"
+                    let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
+                    
+                    print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
+                    updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+                    
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message) // Use the secret from the config
+                    
+                    // Use async delay instead of blocking thread
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    }
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(processedReservations) reservations attempted")
+                print("🎉 Restaurant booking agent completed: \(processedReservations) reservations processed")
+            }
+            
+        } catch {
+            print("❌ DECODING ERROR: \(error)")
+            print("🔧 Error details: \(error.localizedDescription)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("🔑 Missing key: \(key) in context: \(context)")
+                case .typeMismatch(let type, let context):
+                    print("🔄 Type mismatch: expected \(type) in context: \(context)")
+                case .valueNotFound(let type, let context):
+                    print("❓ Value not found: \(type) in context: \(context)")
+                case .dataCorrupted(let context):
+                    print("💥 Data corrupted: \(context)")
+                @unknown default:
+                    print("🤷‍♂️ Unknown decoding error")
+                }
+            }
+            print("🔧 Raw data structure:")
+            print(itineraryData)
+            updateUIStatus(agent: "Reservation Agent", status: "Error processing itinerary.")
+        }
+    }
+}
+
+// Notification names for agent status updates
+extension Notification.Name {
+    static let agentStatusUpdate = Notification.Name("agentStatusUpdate")
+}

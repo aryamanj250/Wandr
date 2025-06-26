@@ -196,41 +196,47 @@ struct ItineraryView: View {
             whyRecommended: "Iconic spot for tranquility and beautiful views.",
             currentStatus: "Open",
             bookingRequired: false,
-            notes: nil
-        ),
-        ItineraryItem(
-            id: UUID().uuidString,
-            day: 1,
-            name: "Breakfast at German Bakery",
-            type: "food",
-            location: "Anjuna, Goa",
-            description: "Enjoy a healthy and delicious breakfast at the famous German Bakery.",
-            time: "9:00 AM",
-            rating: 4.0,
-            priceRange: "₹300-500 per person",
-            budgetImpact: 400,
-            whyRecommended: "Popular for its fresh bakes and relaxed ambiance.",
-            currentStatus: "Open",
-            bookingRequired: false,
-            notes: "Try their apple crumble."
-        ),
-        ItineraryItem(
-            id: UUID().uuidString,
-            day: 1,
-            name: "Explore Anjuna Flea Market",
-            type: "experience",
-            location: "Anjuna, Goa",
-            description: "Discover unique souvenirs, clothes, and handicrafts at this vibrant market.",
-            time: "11:00 AM",
-            rating: 3.8,
-            priceRange: "Varies",
-            budgetImpact: 800,
-            whyRecommended: "A cultural experience with diverse offerings.",
-            currentStatus: "Open on Wednesdays",
-            bookingRequired: false,
-            notes: "Bargaining is key!"
-        )
-    ]
+                notes: nil,
+                cuisine: nil,
+                mealType: nil
+            ),
+            ItineraryItem(
+                id: UUID().uuidString,
+                day: 1,
+                name: "Breakfast at German Bakery",
+                type: "food",
+                location: "Anjuna, Goa",
+                description: "Enjoy a healthy and delicious breakfast at the famous German Bakery.",
+                time: "9:00 AM",
+                rating: 4.0,
+                priceRange: "₹300-500 per person",
+                budgetImpact: 400,
+                whyRecommended: "Popular for its fresh bakes and relaxed ambiance.",
+                currentStatus: "Open",
+                bookingRequired: false,
+                notes: "Try their apple crumble.",
+                cuisine: "German",
+                mealType: "Breakfast"
+            ),
+            ItineraryItem(
+                id: UUID().uuidString,
+                day: 1,
+                name: "Explore Anjuna Flea Market",
+                type: "experience",
+                location: "Anjuna, Goa",
+                description: "Discover unique souvenirs, clothes, and handicrafts at this vibrant market.",
+                time: "11:00 AM",
+                rating: 3.8,
+                priceRange: "Varies",
+                budgetImpact: 800,
+                whyRecommended: "A cultural experience with diverse offerings.",
+                currentStatus: "Open on Wednesdays",
+                bookingRequired: false,
+                notes: "Bargaining is key!",
+                cuisine: nil,
+                mealType: nil
+            )
+        ]
     
     let sampleItineraryResponse = ItineraryResponse(
         parsedCommand: sampleParsedCommand,
@@ -239,5 +245,5 @@ struct ItineraryView: View {
         timelineSuggestion: "Start at 6 AM, beach morning, breakfast, then market exploration."
     )
     
-    return ItineraryView(itineraryResponse: sampleItineraryResponse, isShowing: .constant(true))
+    ItineraryView(itineraryResponse: sampleItineraryResponse, isShowing: .constant(true))
 }
