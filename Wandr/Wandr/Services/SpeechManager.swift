@@ -15,7 +15,7 @@ class SpeechManager: ObservableObject {
     @Published var isRecording: Bool = false
 
     private var audioEngine = AVAudioEngine()
-    private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-IN"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
 

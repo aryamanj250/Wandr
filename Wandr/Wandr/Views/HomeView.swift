@@ -17,7 +17,6 @@ struct HomeView: View {
     @State private var voiceButtonScale: CGFloat = 0.8
     @State private var showVoiceAnimation = false
     @State private var isRecordingVoice = false // This state is now managed by SpeechManager
-    @State private var transcribedText: String = ""
     
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     
@@ -137,11 +136,10 @@ struct HomeView: View {
     
     // MARK: - Voice Interface Overlay
     private var voiceInterfaceOverlay: some View {
-        VoiceInputView(text: $transcribedText)
-            .edgesIgnoringSafeArea(.all)
+        VoiceGlassOverlay(isPresented: $showVoiceInterface)
             .transition(.asymmetric(
-                insertion: .move(edge: .bottom).combined(with: .opacity),
-                removal: .move(edge: .bottom).combined(with: .opacity)
+                insertion: .opacity.combined(with: .scale(scale: 0.95)),
+                removal: .opacity.combined(with: .scale(scale: 1.05))
             ))
     }
     
