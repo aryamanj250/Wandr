@@ -50,9 +50,11 @@ struct VoiceGlassOverlay: View {
                     // Center voice interaction area
                     if !isProcessing {
                         voiceInteractionArea
-                            .padding(.bottom, 80) // Move button higher than HomeView
+                            .padding(.top, 50.5)
+                            .padding(.bottom, 80)
                     } else {
                         simpleLoadingSpinner
+                            .padding(.top, 50.5)
                     }
                     
                     Spacer()
@@ -105,14 +107,33 @@ struct VoiceGlassOverlay: View {
     
     // MARK: - Simple Loading Spinner
     private var simpleLoadingSpinner: some View {
-        ProgressView()
-            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-            .scaleEffect(1.5)
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+            
+            Text("Planning your adventure...")
+                .font(AppleDesign.Typography.title3)
+                .foregroundStyle(AppleDesign.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+        }
     }
     
     // MARK: - Voice Interaction Area (Original Design)
     private var voiceInteractionArea: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 55) {  //was 48.5
+            // Text above button (matching HomeView layout) - fixed height
+            VStack {
+                if transcribedWords.isEmpty && !isListening {
+                    Text("Ready to plan your next trip?")
+                        .font(AppleDesign.Typography.title3)
+                        .foregroundStyle(AppleDesign.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: 24) // Fixed height to prevent button shifting
+            
             // Use exact HomeView voice button design - only hide when editing
             if !isEditingText {
                 homeViewStyleVoiceButton
@@ -235,13 +256,8 @@ struct VoiceGlassOverlay: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
-                    if transcribedWords.isEmpty && !isListening {
-                        Text("Ready to plan your next trip?")
-                            .font(AppleDesign.Typography.title3)
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                    } else {
+                    // Only show transcribed words when there are any
+                    if !transcribedWords.isEmpty {
                         // Animated word display with auto-scroll
                         FlowLayout(spacing: 8) {
                             ForEach(Array(transcribedWords.enumerated()), id: \.offset) { index, word in

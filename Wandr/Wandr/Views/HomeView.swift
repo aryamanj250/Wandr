@@ -123,15 +123,7 @@ struct HomeView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         
-        withAnimation(AppleAnimations.elasticScale(intensity: 1.2)) {
-            showVoiceAnimation = true
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(AppleAnimations.modalPresentation) {
-                showVoiceInterface = true
-            }
-        }
+        showVoiceInterface = true
     }
     
     // MARK: - Voice Interface Overlay
