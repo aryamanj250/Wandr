@@ -53,11 +53,13 @@ class GeminiService {
               "time": "string",
               "rating": "number | null",
               "price_range": "string | null",
-              "budget_impact": "number",
+              "budget_impact": "number | null",
               "why_recommended": "string",
               "current_status": "string | null",
               "booking_required": "boolean",
-              "notes": "string | null"
+              "notes": "string | null",
+              "cuisine": "string | null",
+              "meal_type": "string | null"
             }
           ],
           "total_estimated_cost": "number",

@@ -12,6 +12,11 @@ struct WandrApp: App {
     @State private var showLaunchScreen = true
     @State private var appScale: CGFloat = 0.8
     
+    init() {
+        // Initialize OmnidimensionService when the app starts
+        OmnidimensionService.shared.testOmnidimensionConnectivity()
+    }
+
     var body: some Scene {
         WindowGroup {
             ZStack {

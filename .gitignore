@@ -25,3 +25,7 @@ venv/
 wandr-backend/.env
 test_audio.wav
 create_dummy_audio.py
+
+# Python Dependencies
+PythonDependencies/
+Wandr-omni/ios_python_env/

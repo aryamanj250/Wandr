@@ -79,6 +79,7 @@ struct VoiceInputView: View {
                                 case .success(let response): // Changed to 'response' of type ItineraryResponse
                                     self.itineraryResponse = response
                                     self.showItineraryView = true // Automatically show ItineraryView on success
+                                    OmnidimensionService.shared.sendItineraryToReservationAgent(itineraryResponse: response)
                                 case .failure(let error):
                                     self.showError = true
                                     self.errorMessage = error.localizedDescription

@@ -52,11 +52,13 @@ struct ItineraryItem: Codable, Identifiable {
     let time: String
     let rating: Double?
     let priceRange: String?
-    let budgetImpact: Double
+    let budgetImpact: Double?
     let whyRecommended: String
     let currentStatus: String?
     let bookingRequired: Bool
     let notes: String?
+    let cuisine: String?
+    let mealType: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -73,6 +75,60 @@ struct ItineraryItem: Codable, Identifiable {
         case currentStatus = "current_status"
         case bookingRequired = "booking_required"
         case notes
+        case cuisine
+        case mealType = "meal_type"
+    }
+
+    init(id: String, day: Int, name: String, type: String, location: String, description: String, time: String, rating: Double?, priceRange: String?, budgetImpact: Double?, whyRecommended: String, currentStatus: String?, bookingRequired: Bool, notes: String?, cuisine: String?, mealType: String?) {
+        self.id = id
+        self.day = day
+        self.name = name
+        self.type = type
+        self.location = location
+        self.description = description
+        self.time = time
+        self.rating = rating
+        self.priceRange = priceRange
+        self.budgetImpact = budgetImpact
+        self.whyRecommended = whyRecommended
+        self.currentStatus = currentStatus
+        self.bookingRequired = bookingRequired
+        self.notes = notes
+        self.cuisine = cuisine
+        self.mealType = mealType
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        day = try container.decode(Int.self, forKey: .day)
+        name = try container.decode(String.self, forKey: .name)
+        type = try container.decode(String.self, forKey: .type)
+        location = try container.decode(String.self, forKey: .location)
+        description = try container.decode(String.self, forKey: .description)
+        time = try container.decode(String.self, forKey: .time)
+        // Handle rating which can be a string or number
+        if let ratingString = try? container.decodeIfPresent(String.self, forKey: .rating) {
+            rating = Double(ratingString)
+        } else {
+            rating = try container.decodeIfPresent(Double.self, forKey: .rating)
+        }
+        priceRange = try container.decodeIfPresent(String.self, forKey: .priceRange)
+        budgetImpact = try container.decodeIfPresent(Double.self, forKey: .budgetImpact)
+        // Handle whyRecommended gracefully if key is missing
+        whyRecommended = try container.decodeIfPresent(String.self, forKey: .whyRecommended) ?? "Recommended activity"
+        currentStatus = try container.decodeIfPresent(String.self, forKey: .currentStatus)
+        // Handle bookingRequired which can be a boolean or integer (0/1)
+        if let boolValue = try? container.decodeIfPresent(Bool.self, forKey: .bookingRequired) {
+            bookingRequired = boolValue
+        } else if let intValue = try? container.decodeIfPresent(Int.self, forKey: .bookingRequired) {
+            bookingRequired = intValue != 0
+        } else {
+            bookingRequired = false
+        }
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        cuisine = try container.decodeIfPresent(String.self, forKey: .cuisine)
+        mealType = try container.decodeIfPresent(String.self, forKey: .mealType)
     }
 }
 
