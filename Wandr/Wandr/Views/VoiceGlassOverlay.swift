@@ -133,8 +133,7 @@ struct VoiceGlassOverlay: View {
                 voiceButtonCore
             }
         }
-        .buttonStyle(.glass)
-        .floatingActionButton()
+        .buttonStyle(PlainButtonStyle())
     }
     
     private var pulsingGlowEffect: some View {
@@ -162,11 +161,10 @@ struct VoiceGlassOverlay: View {
     
     private var voiceButtonCore: some View {
         ZStack {
-            // Button background - exact copy from HomeView
+            // Button background with glass effect
             Circle()
                 .fill(.ultraThinMaterial)
                 .frame(width: 120, height: 120)
-                .overlay(Circle().fill(AppleDesign.Colors.surface))
                 .overlay(
                     Circle()
                         .stroke(
