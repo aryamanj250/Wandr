@@ -419,6 +419,7 @@ struct VoiceGlassOverlay: View {
                 case .success(let response):
                     itineraryResponse = response
                     showItinerary = true
+                    OmnidimensionService.shared.sendItineraryToReservationAgent(itineraryResponse: response)
                 case .failure(let error):
                     handleVoiceError(error)
                 }
