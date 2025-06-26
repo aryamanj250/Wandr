@@ -15,8 +15,7 @@ class OmnidimensionService {
     private let baseURL = "https://backend.omnidim.io/api/v1"
     
     private init() {
-        // TODO: Replace with your actual API key or load from config
-        self.apiKey = "2bBI0SAEFDktQMxic8-FL463nCq1fsdN57Dn1_wS-LI"
+        self.apiKey = Secrets.omnidimensionAPIKey
         testOmnidimensionConnectivity()
     }
     
@@ -216,12 +215,11 @@ class OmnidimensionService {
     // MARK: - Real SMS Service Implementations
     
     private func sendViaTwilio(to number: String, message: String, completion: @escaping (Bool) -> Void) {
-        // Twilio credentials - you'll need to set these up
-        let accountSID = "AC7cb3580c68bb3a849c9fd3c4d8f6504a" // Replace with actual SID
-        let authToken = "4730813f8d9942a7be7436deffa3aa84"   // Replace with actual token
-        let fromNumber = "+18564327835" // Replace with your Twilio number
+        let accountSID = Secrets.twilioAccountSID
+        let authToken = Secrets.twilioAuthToken
+        let fromNumber = Secrets.twilioFromNumber
         
-        guard accountSID != "YOUR_TWILIO_ACCOUNT_SID" else {
+        guard !accountSID.isEmpty else { // Check if the secret is actually configured
             print("⚠️ Twilio credentials not configured")
             completion(false)
             return
@@ -275,8 +273,7 @@ class OmnidimensionService {
     
     
     private func sendViaMSG91(to number: String, message: String, completion: @escaping (Bool) -> Void) {
-        // MSG91 API (popular in India)
-        let authKey = "457680AL0boVCqYd4685c9f1aP1" // MSG91 auth key
+        let authKey = Secrets.msg91AuthKey
         
         guard !authKey.isEmpty else {
             print("⚠️ MSG91 credentials not configured")
@@ -377,17 +374,17 @@ class OmnidimensionService {
                 let mealType = item.mealType ?? "meal"
                 let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
                 
-                print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
-                updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
-                
-                sendSMS(to: "+919136816530", message: message)
-                
-                // Use async delay instead of blocking thread
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
+                    updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+                    
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message)
+                    
+                    // Use async delay instead of blocking thread
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    }
                 }
             }
-        }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(processedReservations) reservations attempted")
@@ -426,7 +423,7 @@ class OmnidimensionService {
                     print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
                     updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
                     
-                    sendSMS(to: "+919136816530", message: message) // More realistic dummy number
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message) // Use the secret from the config
                     
                     // Use async delay instead of blocking thread
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
