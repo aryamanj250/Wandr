@@ -80,6 +80,12 @@ class OmnidimensionService {
                 case .success(let response):
                     print("✅ Successfully connected to Omnidimension API")
                     print("Response: \(response)")
+                    
+                    // Check if we have any bots deployed
+                    if let totalRecords = response["total_records"] as? Int, totalRecords == 0 {
+                        print("🤖 No agents deployed - deploying required agents...")
+                        self.deployAllAgents()
+                    }
                 case .failure(let error):
                     print("❌ Failed to connect to Omnidimension API: \(error)")
                     // This is expected if API key is not configured
@@ -90,6 +96,13 @@ class OmnidimensionService {
     }
 
     // MARK: - Agent Scaffolding
+    
+    func deployAllAgents() {
+        print("🚀 Deploying all required agents to Omnidimension...")
+        createReservationAgent()
+        createLogisticsCoordinatorAgent()
+        createBudgetPaymentAgent()
+    }
 
     // MARK: - Agent Management
     
@@ -357,39 +370,38 @@ class OmnidimensionService {
         print("\n🤖 RESTAURANT BOOKING AGENT ACTIVATED")
         print("📋 Processing itinerary for restaurant bookings...")
         
-        let restaurantItems = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }
-        print("🔍 Found \(restaurantItems.count) restaurant/food items in itinerary")
+        let restaurantCount = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }.count
+        print("🔍 Found \(restaurantCount) restaurant/food items in itinerary")
         
-        // Send messages sequentially with delays
-        sendRestaurantMessagesSequentially(restaurants: restaurantItems, index: 0)
-    }
-    
-    private func sendRestaurantMessagesSequentially(restaurants: [ItineraryItem], index: Int) {
-        guard index < restaurants.count else {
-            // All messages sent, update final status
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(restaurants.count) reservations attempted")
-                print("🎉 Restaurant booking agent completed: \(restaurants.count) reservations processed")
+        var processedReservations = 0
+        
+        for (index, item) in itineraryResponse.itinerary.enumerated() {
+            print("📝 Processing item \(index + 1): \(item.name) (Type: \(item.type))")
+            
+            if item.type.lowercased() == "food" {
+                processedReservations += 1
+                let restaurantName = item.name
+                let reservationTime = item.time
+                let location = item.location
+                let cuisine = item.cuisine ?? "unspecified cuisine"
+                let mealType = item.mealType ?? "meal"
+                let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
+                
+                    print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
+                    updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+                    
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message)
+                    
+                    // Use async delay instead of blocking thread
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    }
+                }
             }
-            return
-        }
         
-        let item = restaurants[index]
-        let restaurantName = item.name
-        let reservationTime = item.time
-        let location = item.location
-        let cuisine = item.cuisine ?? "unspecified cuisine"
-        let mealType = item.mealType ?? "meal"
-        let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
-        
-        print("🍽️ Processing reservation \(index + 1): \(restaurantName)")
-        updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
-        
-        sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message)
-        
-        // Wait 3 seconds before sending next message to avoid rate limiting
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.sendRestaurantMessagesSequentially(restaurants: restaurants, index: index + 1)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(processedReservations) reservations attempted")
+            print("🎉 Restaurant booking agent completed: \(processedReservations) reservations processed")
         }
     }
 
@@ -404,11 +416,39 @@ class OmnidimensionService {
             let data = try JSONSerialization.data(withJSONObject: itineraryData, options: [])
             let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: data)
 
-            let restaurantItems = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }
-            print("🔍 Found \(restaurantItems.count) restaurant/food items in itinerary")
+            let restaurantCount = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }.count
+            print("🔍 Found \(restaurantCount) restaurant/food items in itinerary")
             
-            // Send messages sequentially with delays
-            sendRestaurantMessagesSequentially(restaurants: restaurantItems, index: 0)
+            var processedReservations = 0
+            
+            for (index, item) in itineraryResponse.itinerary.enumerated() {
+                print("📝 Processing item \(index + 1): \(item.name) (Type: \(item.type))")
+                
+                if item.type.lowercased() == "food" {
+                    processedReservations += 1
+                    let restaurantName = item.name
+                    let reservationTime = item.time
+                    let location = item.location
+                    let cuisine = item.cuisine ?? "unspecified cuisine"
+                    let mealType = item.mealType ?? "meal"
+                    let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
+                    
+                    print("🍽️ Processing reservation \(processedReservations): \(restaurantName)")
+                    updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+                    
+                    sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message) // Use the secret from the config
+                    
+                    // Use async delay instead of blocking thread
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏳ Simulated booking delay for \(restaurantName) completed")
+                    }
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(processedReservations) reservations attempted")
+                print("🎉 Restaurant booking agent completed: \(processedReservations) reservations processed")
+            }
             
         } catch {
             print("❌ DECODING ERROR: \(error)")
