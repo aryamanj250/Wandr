@@ -6,7 +6,7 @@ class GeminiService {
     private init() {}
 
     func processTextCommand(text: String, apiKey: String, completion: @escaping (Result<ItineraryResponse, Error>) -> Void) {
-        guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=\(apiKey)") else {
+        guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=\(apiKey)") else {
             completion(.failure(GeminiError.invalidURL))
             return
         }

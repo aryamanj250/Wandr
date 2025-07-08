@@ -1,3 +1,10 @@
+//
+//  OmnidimensionError.swift
+//  Wandr
+//
+//  Created by Utsav Balhara on 7/8/25.
+//
+
 import Foundation
 
 // Error types for Omnidimension API
@@ -7,19 +14,29 @@ enum OmnidimensionError: Error {
     case apiError(String)
 }
 
-// Swift-based Omnidimension API client to replace Python SDK
+// Swift-based Omnidimension API client
 class OmnidimensionService {
     static let shared = OmnidimensionService()
     
     private let apiKey: String
     private let baseURL = "https://backend.omnidim.io/api/v1"
     
+    // MARK: - Hardcoded Configuration
+    private let guestName = "Utsav Balhara"
+    private let defaultPartySize = 2
+    private var currentDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: Date())
+    }
+    
     private init() {
         self.apiKey = Secrets.omnidimensionAPIKey
         testOmnidimensionConnectivity()
     }
     
-    // MARK: - HTTP Client
+    // MARK: - Core HTTP Client
     
     private func makeRequest(
         method: String,
@@ -58,6 +75,16 @@ class OmnidimensionService {
                 return
             }
             
+            // Debug logging
+            if let httpResponse = response as? HTTPURLResponse {
+                print("🔍 HTTP Status Code: \(httpResponse.statusCode)")
+                print("🔍 Response Headers: \(httpResponse.allHeaderFields)")
+            }
+            
+            if let rawResponse = String(data: data, encoding: .utf8) {
+                print("🔍 Raw Response: \(rawResponse)")
+            }
+            
             do {
                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     completion(.success(json))
@@ -65,6 +92,7 @@ class OmnidimensionService {
                     completion(.success([:]))
                 }
             } catch {
+                print("🔍 JSON Parsing Error: \(error)")
                 completion(.failure(error))
             }
         }.resume()
@@ -73,7 +101,6 @@ class OmnidimensionService {
     func testOmnidimensionConnectivity() {
         print("Testing Omnidimension connectivity using Swift HTTP client...")
         
-        // Test a simple API endpoint to verify connectivity
         makeRequest(method: "GET", endpoint: "agents") { result in
             DispatchQueue.main.async {
                 switch result {
@@ -82,84 +109,12 @@ class OmnidimensionService {
                     print("Response: \(response)")
                 case .failure(let error):
                     print("❌ Failed to connect to Omnidimension API: \(error)")
-                    // This is expected if API key is not configured
-                    print("Note: Configure your API key to enable full functionality")
                 }
             }
         }
     }
 
-    // MARK: - Agent Scaffolding
-
-    // MARK: - Agent Management
-    
-    func createAgent(name: String, type: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
-        let parameters = [
-            "name": name,
-            "type": type
-        ]
-        
-        makeRequest(method: "POST", endpoint: "agents", parameters: parameters, completion: completion)
-    }
-    
-    func getAgents(completion: @escaping (Result<[String: Any], Error>) -> Void) {
-        makeRequest(method: "GET", endpoint: "agents", completion: completion)
-    }
-    
-    // Placeholder for Reservation Agent
-    func createReservationAgent() {
-        createAgent(name: "Reservation Agent", type: "reservation") { result in
-            switch result {
-            case .success(let response):
-                print("✅ Reservation Agent created: \(response)")
-            case .failure(let error):
-                print("❌ Failed to create Reservation Agent: \(error)")
-            }
-        }
-    }
-
-    // Placeholder for Logistics Coordinator Agent
-    func createLogisticsCoordinatorAgent() {
-        createAgent(name: "Logistics Coordinator", type: "logistics") { result in
-            switch result {
-            case .success(let response):
-                print("✅ Logistics Coordinator Agent created: \(response)")
-            case .failure(let error):
-                print("❌ Failed to create Logistics Coordinator Agent: \(error)")
-            }
-        }
-    }
-
-    // Placeholder for Budget & Payment Agent
-    func createBudgetPaymentAgent() {
-        createAgent(name: "Budget & Payment Agent", type: "payment") { result in
-            switch result {
-            case .success(let response):
-                print("✅ Budget & Payment Agent created: \(response)")
-            case .failure(let error):
-                print("❌ Failed to create Budget & Payment Agent: \(error)")
-            }
-        }
-    }
-
     // MARK: - Agent Communication & Status Updates
-
-    func sendMessageBetweenAgents(from agent1: String, to agent2: String, message: String) {
-        let parameters = [
-            "from_agent": agent1,
-            "to_agent": agent2,
-            "message": message
-        ]
-        
-        makeRequest(method: "POST", endpoint: "agents/communicate", parameters: parameters) { result in
-            switch result {
-            case .success:
-                print("✅ Message sent from \(agent1) to \(agent2)")
-            case .failure(let error):
-                print("❌ Failed to send message: \(error)")
-            }
-        }
-    }
 
     func updateUIStatus(agent: String, status: String) {
         print("📊 UI STATUS UPDATE: [\(agent)] \(status)")
@@ -170,266 +125,266 @@ class OmnidimensionService {
         )
     }
 
-    // MARK: - Integration Points for External Functionality
-
-    func makePhoneCall(to number: String, message: String) {
-        let parameters = [
-            "phone_number": number,
-            "message": message
-        ]
-        
-        makeRequest(method: "POST", endpoint: "calls", parameters: parameters) { result in
-            switch result {
-            case .success:
-                print("✅ Phone call initiated to \(number)")
-            case .failure(let error):
-                print("❌ Failed to initiate call: \(error)")
-            }
-        }
-    }
-
-    func sendSMS(to number: String, message: String) {
-        print("\n🍽️ RESTAURANT BOOKING AGENT - REAL SMS SENDING")
-        print("📱 To: \(number)")
-        print("💬 Message: \(message)")
-        print("⏰ Timestamp: \(Date())")
-        print("─────────────────────────────────────────")
-        
-        // Try Twilio first (most reliable)
-        sendViaTwilio(to: number, message: message) { [weak self] success in
-            if !success {
-                print("🔄 Twilio failed, trying MSG91...")
-                self?.sendViaMSG91(to: number, message: message) { success in
-                    if success {
-                        print("✅ SMS sent successfully via MSG91!")
-                    } else {
-                        print("❌ Both SMS services failed. Check your API configurations.")
-                    }
-                }
-            } else {
-                print("✅ SMS sent successfully via Twilio!")
-            }
-        }
-    }
-    
-    // MARK: - Real SMS Service Implementations
-    
-    private func sendViaTwilio(to number: String, message: String, completion: @escaping (Bool) -> Void) {
-        let accountSID = Secrets.twilioAccountSID
-        let authToken = Secrets.twilioAuthToken
-        let fromNumber = Secrets.twilioFromNumber
-        
-        guard !accountSID.isEmpty else { // Check if the secret is actually configured
-            print("⚠️ Twilio credentials not configured")
-            completion(false)
-            return
-        }
-        
-        let url = "https://api.twilio.com/2010-04-01/Accounts/\(accountSID)/Messages.json"
-        
-        guard let apiURL = URL(string: url) else {
-            completion(false)
-            return
-        }
-        
-        var request = URLRequest(url: apiURL)
-        request.httpMethod = "POST"
-        
-        // Basic auth
-        let credentials = "\(accountSID):\(authToken)"
-        let credentialsData = credentials.data(using: .utf8)!
-        let base64Credentials = credentialsData.base64EncodedString()
-        request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
-        let bodyString = "From=\(fromNumber)&To=\(number)&Body=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
-        request.httpBody = bodyString.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("🔥 Twilio error: \(error.localizedDescription)")
-                    completion(false)
-                    return
-                }
-                
-                if let httpResponse = response as? HTTPURLResponse {
-                    if httpResponse.statusCode == 201 {
-                        print("📤 Twilio SMS sent successfully")
-                        completion(true)
-                    } else {
-                        print("🔥 Twilio HTTP error: \(httpResponse.statusCode)")
-                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                            print("🔥 Response: \(responseString)")
-                        }
-                        completion(false)
-                    }
-                } else {
-                    completion(false)
-                }
-            }
-        }.resume()
-    }
-    
-    
-    private func sendViaMSG91(to number: String, message: String, completion: @escaping (Bool) -> Void) {
-        let authKey = Secrets.msg91AuthKey
-        
-        guard !authKey.isEmpty else {
-            print("⚠️ MSG91 credentials not configured")
-            completion(false)
-            return
-        }
-        
-        let url = "https://api.msg91.com/api/sendhttp.php"
-        
-        guard let apiURL = URL(string: url) else {
-            completion(false)
-            return
-        }
-        
-        var request = URLRequest(url: apiURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
-        let bodyString = "authkey=\(authKey)&mobiles=\(number)&message=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&sender=WANDR&route=4"
-        request.httpBody = bodyString.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("🔥 MSG91 error: \(error.localizedDescription)")
-                    completion(false)
-                    return
-                }
-                
-                if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                    // MSG91 returns various response formats, check for success indicators
-                    if responseString.contains("success") || responseString.contains("Message sent successfully") {
-                        print("📤 MSG91 SMS sent successfully")
-                        completion(true)
-                    } else {
-                        print("🔥 MSG91 API error: \(responseString)")
-                        completion(false)
-                    }
-                } else {
-                    completion(false)
-                }
-            }
-        }.resume()
-    }
-
-    func processPayment(amount: Double, recipient: String) {
-        let parameters = [
-            "amount": amount,
-            "recipient": recipient
-        ] as [String : Any]
-        
-        makeRequest(method: "POST", endpoint: "payments", parameters: parameters) { result in
-            switch result {
-            case .success:
-                print("✅ Payment processed: \(amount) to \(recipient)")
-            case .failure(let error):
-                print("❌ Failed to process payment: \(error)")
-            }
-        }
-    }
-
     // MARK: - Itinerary Processing for Agents
 
     func sendItineraryToReservationAgent(itineraryResponse: ItineraryResponse) {
         print("\n🚀 OMNIDIMENSION AGENT SYSTEM ACTIVATED")
-        print("📨 Sending itinerary to Restaurant Booking Agent...")
-        print("🏨 Location: \(itineraryResponse.parsedCommand?.location ?? "Unknown location")")
-        print("💰 Budget: $\(itineraryResponse.totalEstimatedCost)")
-        print("📝 Items in itinerary: \(itineraryResponse.itinerary.count)")
+        print("📨 Sending itinerary to DineRes Assistant Agent...")
         
-        updateUIStatus(agent: "Reservation Agent", status: "Receiving Itinerary...")
+        // Print the complete itinerary response
+        print("🔍 COMPLETE ITINERARY RESPONSE:")
+        print("   - Total Estimated Cost: \(itineraryResponse.totalEstimatedCost)")
+        print("   - Timeline Suggestion: \(itineraryResponse.timelineSuggestion)")
+        print("   - Total items: \(itineraryResponse.itinerary.count)")
         
-        // Work directly with the ItineraryResponse object instead of encoding/decoding
+        if let parsedCommand = itineraryResponse.parsedCommand {
+            print("   - Parsed Command:")
+            print("     * Location: \(parsedCommand.location ?? "nil")")
+            print("     * Budget: \(parsedCommand.budget ?? 0)")
+            print("     * Duration Hours: \(parsedCommand.durationHours ?? 0)")
+            print("     * Group Size: \(parsedCommand.groupSize ?? 0)")
+        }
+        
+        for (index, item) in itineraryResponse.itinerary.enumerated() {
+            print("   - Item \(index + 1):")
+            print("     * ID: \(item.id)")
+            print("     * Day: \(item.day)")
+            print("     * Name: \(item.name)")
+            print("     * Type: \(item.type)")
+            print("     * Time: \(item.time)")
+            print("     * Location: \(item.location)")
+            print("     * Description: \(item.description)")
+            print("     * Cuisine: \(item.cuisine ?? "nil")")
+            print("     * Meal Type: \(item.mealType ?? "nil")")
+            print("     * Price Range: \(item.priceRange ?? "nil")")
+            print("     * Budget Impact: \(item.budgetImpact ?? 0)")
+            print("     * Rating: \(item.rating ?? 0)")
+            print("     * Booking Required: \(item.bookingRequired)")
+            print("     * Current Status: \(item.currentStatus ?? "nil")")
+            print("     * Notes: \(item.notes ?? "nil")")
+            print("     * Why Recommended: \(item.whyRecommended)")
+        }
+        
+        updateUIStatus(agent: "DineRes Assistant", status: "Receiving Itinerary...")
+        
+        // Work directly with the ItineraryResponse object
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.processItineraryForRestaurants(itineraryResponse: itineraryResponse)
         }
     }
 
+    // Store the current itinerary response for accessing parsed command data
+    private var currentItineraryResponse: ItineraryResponse?
+    
+    private func getCurrentPartySize() -> Int? {
+        return currentItineraryResponse?.parsedCommand?.groupSize
+    }
+    
     private func processItineraryForRestaurants(itineraryResponse: ItineraryResponse) {
-        updateUIStatus(agent: "Reservation Agent", status: "Processing Itinerary...")
-        print("\n🤖 RESTAURANT BOOKING AGENT ACTIVATED")
-        print("📋 Processing itinerary for restaurant bookings...")
+        // Store the current response for accessing party size later
+        self.currentItineraryResponse = itineraryResponse
         
-        let restaurantItems = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }
+        updateUIStatus(agent: "DineRes Assistant", status: "Processing Itinerary...")
+        print("\n🤖 DINERES ASSISTANT AGENT ACTIVATED")
+        
+        print("🔍 FILTERING FOR FOOD ITEMS:")
+        let allItems = itineraryResponse.itinerary
+        print("   - Total items before filtering: \(allItems.count)")
+        
+        for (index, item) in allItems.enumerated() {
+            let isFood = item.type.lowercased() == "food"
+            print("   - Item \(index + 1): \(item.name) (type: '\(item.type)') -> Food: \(isFood)")
+        }
+        
+        let restaurantItems = allItems.filter { $0.type.lowercased() == "food" }
         print("🔍 Found \(restaurantItems.count) restaurant/food items in itinerary")
         
-        // Send messages sequentially with delays
+        print("🔍 RESTAURANT ITEMS TO PROCESS:")
+        for (index, item) in restaurantItems.enumerated() {
+            print("   - Restaurant \(index + 1): \(item.name)")
+            print("     * Time: \(item.time)")
+            print("     * Location: \(item.location)")
+            print("     * Cuisine: \(item.cuisine ?? "nil")")
+            print("     * Meal Type: \(item.mealType ?? "nil")")
+        }
+        
+        // Start making calls sequentially for each restaurant
         sendRestaurantMessagesSequentially(restaurants: restaurantItems, index: 0)
     }
     
     private func sendRestaurantMessagesSequentially(restaurants: [ItineraryItem], index: Int) {
         guard index < restaurants.count else {
-            // All messages sent, update final status
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.updateUIStatus(agent: "Reservation Agent", status: "✅ \(restaurants.count) reservations attempted")
-                print("🎉 Restaurant booking agent completed: \(restaurants.count) reservations processed")
+            // All calls have been initiated
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                let status = "✅ All \(restaurants.count) reservation calls have been initiated."
+                self.updateUIStatus(agent: "DineRes Assistant", status: status)
+                print("🎉 DineRes Assistant completed its tasks.")
             }
             return
         }
         
         let item = restaurants[index]
-        let restaurantName = item.name
-        let reservationTime = item.time
-        let location = item.location
-        let cuisine = item.cuisine ?? "unspecified cuisine"
-        let mealType = item.mealType ?? "meal"
-        let message = "Reservation request for \(mealType) at \(restaurantName) (\(cuisine) cuisine) at \(reservationTime) in \(location). Please confirm availability."
+        let agentId = 3399 // Your "DineRes Assistant" agent ID
         
-        print("🍽️ Processing reservation \(index + 1): \(restaurantName)")
-        updateUIStatus(agent: "Reservation Agent", status: "Booking \(mealType) at \(restaurantName)...")
+        print("🔍 PROCESSING RESTAURANT \(index + 1):")
+        print("   - Restaurant Item Details:")
+        print("     * ID: \(item.id)")
+        print("     * Name: \(item.name)")
+        print("     * Time: \(item.time)")
+        print("     * Location: \(item.location)")
+        print("     * Cuisine: \(item.cuisine ?? "nil")")
+        print("     * Meal Type: \(item.mealType ?? "nil")")
+        print("     * Type: \(item.type)")
+        print("     * Description: \(item.description)")
+        print("     * Price Range: \(item.priceRange ?? "nil")")
+        print("     * Budget Impact: \(item.budgetImpact ?? 0)")
+        print("     * Booking Required: \(item.bookingRequired)")
         
-        sendSMS(to: Secrets.restaurantBookingSMSNumber, message: message)
+        // Get party size from parsed command, fallback to default
+        let partySize = self.getCurrentPartySize() ?? self.defaultPartySize
         
-        // Wait 3 seconds before sending next message to avoid rate limiting
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.sendRestaurantMessagesSequentially(restaurants: restaurants, index: index + 1)
+        // Create the call context for the agent
+        let callContext: [String: Any] = [
+            "restaurant_name": item.name,
+            "date": self.currentDate,
+            "time": item.time,
+            "location": item.location,
+            "cuisine": item.cuisine ?? "unspecified cuisine",
+            "meal_type": item.mealType ?? "meal",
+            "guest_name": self.guestName,
+            "party_size": partySize
+        ]
+        
+        print("🔍 CALL CONTEXT CREATED:")
+        print("   - Agent ID: \(agentId)")
+        print("   - Phone Number: \(Secrets.restaurantBookingPhoneNumber)")
+        print("   - Call Context: \(callContext)")
+        
+        print("📞 Processing reservation \(index + 1): Calling \(item.name)...")
+        updateUIStatus(agent: "DineRes Assistant", status: "Calling \(item.name) for a \(item.mealType ?? "meal")...")
+        
+        // Use the corrected dispatchCall function
+        dispatchCall(
+            agentId: agentId,
+            toNumber: Secrets.restaurantBookingPhoneNumber, // Must include country code
+            callContext: callContext
+        ) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("✅ Call to \(item.name) initiated successfully!")
+                    print("   Response: \(response)")
+                    self.updateUIStatus(agent: "DineRes Assistant", status: "✅ Call placed to \(item.name).")
+                    
+                    // If we have a call ID, retrieve the call log after a delay
+                    if let callId = response["call_id"] as? String {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 30.0) { // Wait 30 seconds before checking logs
+                            self.getCallLog(callLogId: callId) { logResult in
+                                switch logResult {
+                                case .success(let log):
+                                    print("📋 Call log for \(item.name): \(log)")
+                                case .failure(let error):
+                                    print("❌ Failed to retrieve call log: \(error)")
+                                }
+                            }
+                        }
+                    }
+                    
+                case .failure(let error):
+                    print("❌ Failed to initiate call to \(item.name): \(error.localizedDescription)")
+                    self.updateUIStatus(agent: "DineRes Assistant", status: "❌ Call failed for \(item.name).")
+                }
+                
+                // Trigger the next call in the sequence
+                self.sendRestaurantMessagesSequentially(restaurants: restaurants, index: index + 1)
+            }
         }
     }
+}
 
-    private func handleItineraryMessage(itineraryData: [String: Any]) {
-        updateUIStatus(agent: "Reservation Agent", status: "Processing Itinerary...")
-        print("\n🤖 RESTAURANT BOOKING AGENT ACTIVATED")
-        print("📋 Processing itinerary for restaurant bookings...")
+// MARK: - Corrected Call API Functions
+extension OmnidimensionService {
+    
+    // Dispatch a call using the correct API format
+    func dispatchCall(
+        agentId: Int,
+        toNumber: String,
+        callContext: [String: Any]? = nil,
+        completion: @escaping (Result<[String: Any], Error>) -> Void
+    ) {
+        let endpoint = "calls/dispatch" // Correct endpoint from curl docs
+        var parameters: [String: Any] = [
+            "agent_id": agentId,
+            "to_number": toNumber
+        ]
         
-        do {
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            let data = try JSONSerialization.data(withJSONObject: itineraryData, options: [])
-            let itineraryResponse = try decoder.decode(ItineraryResponse.self, from: data)
+        if let context = callContext {
+            parameters["call_context"] = context
+        }
+        
+        makeRequest(method: "POST", endpoint: endpoint, parameters: parameters) { result in
+            switch result {
+            case .success(let response):
+                if let error = response["error"] as? String {
+                    completion(.failure(OmnidimensionError.apiError(error)))
+                } else {
+                    completion(.success(response))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // Get call logs with pagination and optional filtering
+    func getCallLogs(
+        page: Int = 1,
+        pageSize: Int = 10,
+        agentId: Int? = nil,
+        completion: @escaping (Result<[String: Any], Error>) -> Void
+    ) {
+        var endpoint = "calls/logs?pageno=\(page)&pagesize=\(pageSize)"
+        
+        if let agentId = agentId {
+            endpoint += "&agentid=\(agentId)"
+        }
+        
+        makeRequest(method: "GET", endpoint: endpoint, parameters: nil, completion: completion)
+    }
+    
+    // Get detailed information about a specific call log
+    func getCallLog(
+        callLogId: String,
+        completion: @escaping (Result<[String: Any], Error>) -> Void
+    ) {
+        let endpoint = "calls/logs/\(callLogId)"
+        makeRequest(method: "GET", endpoint: endpoint, completion: completion)
+    }
+}
 
-            let restaurantItems = itineraryResponse.itinerary.filter { $0.type.lowercased() == "food" }
-            print("🔍 Found \(restaurantItems.count) restaurant/food items in itinerary")
-            
-            // Send messages sequentially with delays
-            sendRestaurantMessagesSequentially(restaurants: restaurantItems, index: 0)
-            
-        } catch {
-            print("❌ DECODING ERROR: \(error)")
-            print("🔧 Error details: \(error.localizedDescription)")
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("🔑 Missing key: \(key) in context: \(context)")
-                case .typeMismatch(let type, let context):
-                    print("🔄 Type mismatch: expected \(type) in context: \(context)")
-                case .valueNotFound(let type, let context):
-                    print("❓ Value not found: \(type) in context: \(context)")
-                case .dataCorrupted(let context):
-                    print("💥 Data corrupted: \(context)")
-                @unknown default:
-                    print("🤷‍♂️ Unknown decoding error")
+// MARK: - Helper Function to Retrieve Recent Call Logs
+extension OmnidimensionService {
+    
+    // Retrieve and display recent call logs for monitoring
+    func displayRecentCallLogs(for agentId: Int? = nil) {
+        getCallLogs(page: 1, pageSize: 10, agentId: agentId) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("\n📞 Recent Call Logs:")
+                    if let logs = response["logs"] as? [[String: Any]] {
+                        for (index, log) in logs.enumerated() {
+                            print("  \(index + 1). Call ID: \(log["id"] ?? "Unknown")")
+                            print("     Status: \(log["status"] ?? "Unknown")")
+                            print("     Duration: \(log["duration"] ?? "Unknown") seconds")
+                            print("     Date: \(log["created_at"] ?? "Unknown")")
+                            print("     ---")
+                        }
+                    }
+                case .failure(let error):
+                    print("❌ Failed to retrieve call logs: \(error)")
                 }
             }
-            print("🔧 Raw data structure:")
-            print(itineraryData)
-            updateUIStatus(agent: "Reservation Agent", status: "Error processing itinerary.")
         }
     }
 }
